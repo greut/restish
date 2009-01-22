@@ -210,13 +210,21 @@ class TemplateChildMatcher(object):
         def re_segments(segments):
             for segment in segments:
                 if len(segment) >= 2 and \
-                   segment[0] == '{' and segment[-1] == '}':
-                    yield '(?P<%s>.*?)' % segment[1:-1]
+                    segment[0] == '{' and segment[-1] == '}':
+                    pos = segment.find(":")
+                    if ~pos:
+                        regex = '(?P<%s>%s)' % (segment[1:pos], segment[pos+1:-1])
+                    else:
+                        regex = r'(?P<%s>[^/]+)' % segment[1:-1]
+                    yield regex
                 else:
                     yield segment
         segments = self.pattern.split('/')
         self._count = len(segments)
-        self._regex = re.compile('^' + '\\/'.join(re_segments(segments)) + '$')
+        _regex = '^' + r'/'.join(re_segments(segments)) + '$'
+        print _regex
+        self._regex = re.compile(_regex)
+        
 
     def __call__(self, request, segments):
         match_segments, remaining_segments = \

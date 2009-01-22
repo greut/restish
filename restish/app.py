@@ -60,10 +60,15 @@ class RestishApp(object):
         A resource is allowed to return another resource to be used in its
         place. This method handles the recursive calling.
         """
-        while True:
-            response = resource(request)
-            if isinstance(response, http.Response):
-                break
-            resource = response
-        return response
+        
+        # TODO: workaround for a bug I ignore.
+        if not isinstance(resource, http.Response):
+            while True:
+                response = resource(request)
+                if isinstance(response, http.Response):
+                    break
+                resource = response
+            return response
+        else:
+            return resource
 

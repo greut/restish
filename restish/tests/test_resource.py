@@ -186,7 +186,7 @@ class TestChildLookup(unittest.TestCase):
         print R
         assert R['status'].startswith('200')
         assert R['body'] == "[u'foo']"
-
+        
     def test_specificity(self):
         """
         Check the child match specificity.
@@ -230,6 +230,42 @@ class TestChildLookup(unittest.TestCase):
                 ('/foo/b/c', '{a}/b/c'),
                 ('/foo', 'any'),
                 ]
+        A = app.RestishApp(Resource())
+        for path, expected in tests:
+            R = wsgi_out(A, http.Request.blank(path).environ)
+            print path, expected, R
+            assert R['body'] == expected
+    
+    def test_typed_match(self):
+        class Resource(resource.Resource):
+            @resource.child('{a:[0-9]+}')
+            def number(self, request, segments, **kw):
+                return http.ok([], "number %(a)s" % kw)
+            
+            @resource.child('{a:[a-z]+}')
+            def lower(self, request, segments, **kw):
+                return http.ok([], "lower %(a)s" % kw)
+            
+            @resource.child('{a:[A-Z]+}')
+            def upper(self, request, segments, **kw):
+                return http.ok([], "upper %(a)s" % kw)
+
+            @resource.child('{a:13{2}7!}')
+            def leet(self, request, segments, **kw):
+                return http.ok([], "leet %(a)s" % kw)
+
+            @resource.child('{a:_.+}/{b:.+}')
+            def multiple(self, request, segments, **kw):
+                return http.ok([], "multiple %(a)s, %(b)s" % kw)
+        
+        tests = [
+                ('/123', 'number 123'),
+                ('/abc', 'lower abc'),
+                ('/ABC', 'upper ABC'),
+                ('/1337!', 'leet 1337!'),
+                ('/_a/b', 'multiple _a, b'),
+                ]
+
         A = app.RestishApp(Resource())
         for path, expected in tests:
             R = wsgi_out(A, http.Request.blank(path).environ)
