@@ -257,6 +257,10 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('{a:_.+}/{b:.+}')
             def multiple(self, request, segments, **kw):
                 return http.ok([], "multiple %(a)s, %(b)s" % kw)
+
+            @resource.child('{y:[0-9]{4}}/{m:[0-9]{2}}/{d:[0-9]{2}}')
+            def date(self, request, segments, **kw):
+                return http.ok([], "date %(y)s %(m)s %(d)s" % kw)
         
         tests = [
                 ('/123', 'number 123'),
@@ -264,6 +268,7 @@ class TestChildLookup(unittest.TestCase):
                 ('/ABC', 'upper ABC'),
                 ('/1337!', 'leet 1337!'),
                 ('/_a/b', 'multiple _a, b'),
+                ('/2008/10/01', 'date 2008 10 01'),
                 ]
 
         A = app.RestishApp(Resource())
