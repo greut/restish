@@ -236,7 +236,7 @@ class TestChildLookup(unittest.TestCase):
             print path, expected, R
             assert R['body'] == expected
     
-    def test_typed_match(self):
+    def test_regex_match(self):
         class Resource(resource.Resource):
             @resource.child('{a:[0-9]+}')
             def number(self, request, segments, **kw):
@@ -274,6 +274,67 @@ class TestChildLookup(unittest.TestCase):
         A = app.RestishApp(Resource())
         for path, expected in tests:
             R = wsgi_out(A, http.Request.blank(path).environ)
+            print path, expected, R
+            assert R['body'] == expected
+    
+    def test_subtree_match(self):
+        class Resource(resource.Resource):
+            @resource.child()
+            def a(self, request, segments):
+                return A()
+
+            @resource.child("b")
+            def bb(self, request, segments):
+                return B()
+
+            @resource.child("{c:[a-z]{3,}}")
+            def c(self, request, segments, **kw):
+                return C(**kw)
+
+        class Generic(resource.Resource):
+            def __str__(self):
+                return self.__class__.__name__
+
+            @resource.child()
+            def a(self, request, segments):
+                return http.ok([], "%s/a" % self)
+            
+            @resource.child("b")
+            def bb(self, request, segments):
+                return http.ok([], "%s/b" % self)
+
+            @resource.child("{c:[a-z]{3,}}")
+            def c(self, request, segments, **kw):
+                return http.ok([], "%s/%s" % (self, kw["c"]))
+
+        class A(Generic):
+            pass
+
+        class B(Generic):
+            pass
+
+        class C(Generic):
+            def __init__(self, c):
+                self.c = c
+
+            def __str__(self):
+                return self.c
+        
+        tests = [
+                ('/a/a', 'A/a'),
+                ('/a/b', 'A/b'),
+                ('/a/abc', 'A/abc'),
+                ('/b/a', 'B/a'),
+                ('/b/b', 'B/b'),
+                ('/b/abc', 'B/abc'),
+                ('/abc/a', 'abc/a'),
+                ('/abc/b', 'abc/b'),
+                ('/abc/abc', 'abc/abc'),
+                ]
+
+        App = app.RestishApp(Resource())
+        for path, expected in tests:
+            R = wsgi_out(App, http.Request.blank(path).environ)
             print path, expected, R
             assert R['body'] == expected
 

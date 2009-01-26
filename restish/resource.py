@@ -204,9 +204,9 @@ class TemplateChildMatcher(object):
             return 1
         segments = self.pattern.split('/')
         self.score = tuple(score(segment) for segment in segments)
-
-    def _compile(self):
-        """ compile the regexp to match segments """
+    
+    def _build_regex(self):
+        """ Build the regex from the pattern """
         def re_segments(segments):
             for segment in segments:
                 if len(segment) >= 2 and \
@@ -219,12 +219,14 @@ class TemplateChildMatcher(object):
                     yield regex
                 else:
                     yield segment
+
         segments = self.pattern.split('/')
         self._count = len(segments)
-        _regex = '^' + r'/'.join(re_segments(segments)) + '$'
-        print _regex
-        self._regex = re.compile(_regex)
-        
+        return '/'.join(re_segments(segments))
+
+    def _compile(self):
+        """ compile the regexp to match segments """
+        self._regex = re.compile('^' + self._build_regex() + '$')
 
     def __call__(self, request, segments):
         match_segments, remaining_segments = \
