@@ -4,7 +4,7 @@ Test resource behaviour.
 
 import unittest
 
-from restish import app, http, resource
+from restish import app, http, resource, templating
 from restish.tests.util import wsgi_out
 
 
@@ -84,20 +84,38 @@ class TestChildLookup(unittest.TestCase):
         assert R['body'] == 'foo//foo/foo///'
 
     def test_implicitly_named(self):
+        def renderer(template, args, encoding=None):
+            return template
+
         class Resource(resource.Resource):
             def __init__(self, segments=[]):
                 self.segments = segments
+            
             @resource.child()
             def implicitly_named_child(self, request, segments):
                 return self.__class__(self.segments + ['implicitly_named_child'])
+            @resource.child("implicitly_named_child_with_templating")
+            @templating.page('page')
+            def implicitly_named_child_with_templating(self, request, segments):
+                return self.__class__(self.segments + ['implicitly_named_child_with_templating'])
+
             def __call__(self, request):
                 return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments))
-        A = app.RestishApp(Resource())
-        R = wsgi_out(A, http.Request.blank('/implicitly_named_child').environ)
-        print R
-        assert R['status'].startswith('200')
-        assert R['body'] == 'implicitly_named_child'
 
+        tests = [
+                 ('/implicitly_named_child', 'implicitly_named_child'),
+                 ('/implicitly_named_child_with_templating', 'implicitly_named_child_with_templating'),
+                ]
+        environ = {'restish.templating.renderer': renderer}
+        
+        A = app.RestishApp(Resource())
+        for url, expected in tests:
+            environ = http.Request.blank(url, environ).environ
+            R = wsgi_out(A, environ)
+            print R, url, R["body"], expected
+            assert R['status'].startswith('200')
+            assert R['body'] == expected
+    
     def test_explicitly_named(self):
         class Resource(resource.Resource):
             def __init__(self, segments=[]):

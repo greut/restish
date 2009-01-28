@@ -142,7 +142,7 @@ passed down from resource to resource.
     class Blog(resource.Resource):
 
         @resource.child()
-        def entries(self, request, segments)A
+        def entries(self, request, segments):
             # The segments contain everything below /blog/entries
             # Pass the first segment through to Entry (should be entry id) 
             # The empty tuple says pass no more segments to Entry
