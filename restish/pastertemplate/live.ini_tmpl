@@ -6,10 +6,10 @@ APP_ID = ${package}@localhost
 SMTP_SERVER = localhost
 ERROR_EMAIL_FROM = %(APP_ID)s
 ERROR_EMAIL_TO = %(APP_ID)s
-CACHE_DIR = %(here)s/cache
 
 [app:main]
-use = config:${package}.ini#${package}
+use = egg:${project}
+cache_dir = %(here)s/cache
 filter-with = error_catcher
 
 [server:main]

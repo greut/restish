@@ -173,7 +173,10 @@ def child(matcher=None):
     def decorator(func, matcher=matcher):
         # No matcher? Use the function name.
         if matcher is None:
-            matcher = func.__name__
+            if hasattr(func, "_name"):
+                matcher = func._name
+            else:
+                matcher = func.__name__
         # If the matcher is a string then create a TemplateChildMatcher in its
         # place.
         if isinstance(matcher, str):
@@ -199,7 +202,8 @@ class TemplateChildMatcher(object):
     def _calc_score(self):
         """ Return the score for this element """
         def score(segment):
-            if len(segment) >= 2 and segment[0] == '{' and segment[-1] == '}':
+            if len(segment) >= 2 and segment.find('{') + segment.find('}') != \
+                -2:
                 return 0
             return 1
         segments = self.pattern.split('/')
@@ -209,13 +213,16 @@ class TemplateChildMatcher(object):
         """ Build the regex from the pattern """
         def re_segments(segments):
             for segment in segments:
-                if len(segment) >= 2 and \
-                    segment[0] == '{' and segment[-1] == '}':
-                    pos = segment.find(":")
+                if len(segment) >= 2 and segment.find("{") + \
+                    segment.find("}") != -2:
+                    prefix, rest = segment.split("{", 1)
+                    var, suffix = rest.rsplit("}", 1)
+                    pos = var.find(":")
                     if ~pos:
-                        regex = '(?P<%s>%s)' % (segment[1:pos], segment[pos+1:-1])
+                        regex = '%s(?P<%s>%s)%s' % (prefix, var[:pos], \
+                            var[pos+1:], suffix)
                     else:
-                        regex = r'(?P<%s>[^/]+)' % segment[1:-1]
+                        regex = r'%s(?P<%s>[^/]+)%s' % (prefix, var, suffix)
                     yield regex
                 else:
                     yield segment

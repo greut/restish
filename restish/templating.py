@@ -64,6 +64,7 @@ class Rendering(object):
                         self.render(request, template, args=args_,
                                     encoding=encoding)
                         )
+            decorated._name = func.func_name
             return decorated
         return decorator
 
@@ -91,6 +92,7 @@ class Rendering(object):
                 args_.update(args)
                 # Render the template and return a response.
                 return self.render(request, template, args=args_)
+            decorated._name = func.__name__
             return decorated
         return decorator
 

@@ -2,6 +2,9 @@
 WSGI/PasteDeploy application bootstrap module.
 """
 
+from paste.cascade import Cascade
+from paste.urlparser import StaticURLParser
+
 from restish.app import RestishApp
 
 from ${package}.resource import root
@@ -16,7 +19,12 @@ def make_app(global_conf, **app_conf):
     """
     app = RestishApp(root.Root())
     app = setup_environ(app, global_conf, app_conf)
-    return app
+    
+    if "document_root" in app_conf:
+        static = StaticURLParser(app_conf["document_root"])
+        return Cascade([static, app])
+    else:
+        return app
 
 
 def setup_environ(app, global_conf, app_conf):
