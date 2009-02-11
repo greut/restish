@@ -42,7 +42,7 @@ class TestResource(unittest.TestCase):
 
 
 class TestChildLookup(unittest.TestCase):
-    '''
+    
     def test_404(self):
         class Resource(resource.Resource):
             pass
@@ -82,7 +82,7 @@ class TestChildLookup(unittest.TestCase):
         print R
         assert R['status'].startswith('200')
         assert R['body'] == 'foo//foo/foo///'
-    '''
+    
     def test_implicitly_named(self):
         def renderer(template, args, encoding=None):
             return args['page']
