@@ -43,6 +43,9 @@ class TestResponseCreation(unittest.TestCase):
             yield ''
         return http.Response('200 OK', [('Content-Type', 'text/plain')], gen())
 
+    def test_init_with_none(self):
+        return http.Response('200 OK', [], None)
+
 
 class TestSuccessResponseFactories(unittest.TestCase):
 
@@ -81,6 +84,9 @@ class TestSuccessResponseFactories(unittest.TestCase):
     def test_not_modified(self):
         r = http.not_modified()
         assert r.status.startswith('304')
+        r = http.not_modified([('ETag', '123')])
+        assert r.status.startswith('304')
+        assert r.headers['ETag'] == '123'
 
 
 class TestServerErrorResponseFactories(unittest.TestCase):
