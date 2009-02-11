@@ -142,7 +142,7 @@ passed down from resource to resource.
     class Blog(resource.Resource):
 
         @resource.child()
-        def entries(self, request, segments)A
+        def entries(self, request, segments):
             # The segments contain everything below /blog/entries
             # Pass the first segment through to Entry (should be entry id) 
             # The empty tuple says pass no more segments to Entry
@@ -313,6 +313,38 @@ In this case, the first match has more exact matches and so wins.
 
 This one is a little more difficult but because we have an exact match on the
 number of segments, number 2 wins
+
+Regular Expression Based Matchers
+---------------------------------
+
+Because some architectures require a finely grained control of your resources,
+it's also possible to assign a regular expression to a segment. Let's see how
+the blog example can take advantage of this:
+
+.. code-block:: python
+
+    class Root(resource.Resource):
+
+        @resource.child('{year:[0-9]{4}}/{month:[01][0-9]}')
+        def blog_month_entries(self, request, segments, **kw):
+            return BlogList(**kw), segments
+
+        @resource.child('{year:[0-9]{4}}/{month:[01][0-9]}/{entryid:[0-9]+}')
+        def blog(self, request, segments, **kw):
+            return BlogPost(**kw), segments
+
+        @resource.child('feeds/{type:atom|rss|rss2}.xml')
+        def feeds(self, request, segments, **kw):
+            return BlogFeed(**kw), segments
+
+        @resource.child()
+        def archives(self, request, segments):
+            return BlogArchives(), segments
+
+Because we know what kind of data the various fields will contain, it's then
+possible to share a common space between different kind of resources. There
+is no conflict between a ``year`` composed of 4 numbers and the string
+``feeds`` in the example above.
 
 Custom Matchers
 ---------------

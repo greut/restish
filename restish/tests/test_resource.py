@@ -283,7 +283,7 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('{y:[0-9]{4}}/{m:[0-9]{2}}/{d:[0-9]{2}}')
             def date(self, request, segments, **kw):
                 return http.ok([], "date %(y)s %(m)s %(d)s" % kw)
-
+            
             @resource.child('prefix-{id:[0-9]}')
             def prefixed(self, request, segments, **kw):
                 return http.ok([], "prefix %(id)s" % kw)
@@ -291,6 +291,10 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('{id:[0-9]}-suffix')
             def suffixed(self, request, segments, **kw):
                 return http.ok([], "suffix %(id)s" % kw)
+            
+            @resource.child('feeds/{type:atom|rss|rss2}.xml')
+            def feeds(self, request, segments, **kw):
+                return http.ok([], "feed %(type)s" % kw)
         
         tests = [
                 ('/123', 'number 123'),
@@ -300,7 +304,9 @@ class TestChildLookup(unittest.TestCase):
                 ('/_a/b', 'multiple _a, b'),
                 ('/2008/10/01', 'date 2008 10 01'),
                 ('/prefix-1', 'prefix 1'),
-                ('/1-suffix', 'suffix 1')
+                ('/1-suffix', 'suffix 1'),
+                ('/feeds/rss.xml', 'feed rss'),
+                ('/feeds/atom.xml', 'feed atom')
                 ]
 
         A = app.RestishApp(Resource())

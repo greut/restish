@@ -173,10 +173,7 @@ def child(matcher=None):
     def decorator(func, matcher=matcher):
         # No matcher? Use the function name.
         if matcher is None:
-            if hasattr(func, "_name"):
-                matcher = func._name
-            else:
-                matcher = func.__name__
+            matcher = func.__name__
         # If the matcher is a string then create a TemplateChildMatcher in its
         # place.
         if isinstance(matcher, str):
