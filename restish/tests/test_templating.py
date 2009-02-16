@@ -137,6 +137,24 @@ class TestPage(unittest.TestCase):
         response = Resource({'foo': 'bar'})(request)
         assert response.status.startswith('200')
         assert response.body == '<p>test.html {\'foo\': \'bar\'}</p>'
+    
+    def test_page_decorator_contains_a_redirection(self):
+        def renderer(template, args, encoding=None):
+            raise "Do not call me!"
+        
+        class Resource(resource.Resource):
+            def __init__(self, args):
+                self.args = args
+            @resource.GET()
+            @templating.page('test.html')
+            def html(self, request):
+                return http.found("http://example.org/")
+        environ = {'restish.templating.renderer': renderer}
+        request = http.Request.blank('/', environ=environ)
+        response = Resource({})(request)
+        assert response.status.startswith('302')
+        assert response.headers.get("location") == "http://example.org/"
+        assert response.body == ''
 
 
 if __name__ == '__main__':

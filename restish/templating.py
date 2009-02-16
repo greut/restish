@@ -54,16 +54,20 @@ class Rendering(object):
             def decorated(page, request, *a, **k):
                 # Collect the args from the callable.
                 args = func(page, request, *a, **k)
-                # Add common args and overwrite with those returned by the
-                # decorated object.
-                args_ = self.page_args(request, page)
-                args_.update(args)
-                # Render the template and return a response.
-                return http.ok(
-                        [('Content-Type', "%s; charset=%s"%(type, encoding))],
-                        self.render(request, template, args=args_,
-                                    encoding=encoding)
-                        )
+                # The response might already be an HTTP one
+                if not isinstance(args, http.Response):
+                    # Add common args and overwrite with those returned by the
+                    # decorated object.
+                    args_ = self.page_args(request, page)
+                    args_.update(args)
+                    # Render the template and return a response.
+                    return http.ok(
+                            [('Content-Type', "%s; charset=%s"%(type, encoding))],
+                            self.render(request, template, args=args_,
+                                        encoding=encoding)
+                            )
+                else:
+                    return args
             decorated.__name__ = func.func_name
             return decorated
         return decorator
