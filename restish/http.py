@@ -3,6 +3,8 @@ HTTP Request and Response objects, simple Response factories and exceptions
 types for common HTTP errors.
 """
 import webob
+import urllib
+
 
 from restish import error, url
 
@@ -21,6 +23,8 @@ class Request(webob.Request):
 
     def __init__(self, environ):
         webob.Request.__init__(self, environ)
+        # FIXME: not safe, but where should I put this? -- Yoan
+        self.charset = "utf-8"
 
     @property
     def host_url(self):
@@ -93,6 +97,19 @@ class Response(webob.Response):
         webob.Response.__init__(self, **kwargs)
 
 
+def quote(location):
+    """ Quote an unicode location into it's correct set of %XX chars.
+    socket will not be able to determine the size of the content otherwise.
+    
+    [...]
+    File "/usr/lib/python2.5/socket.py", line 267, in write
+      data = str(data) # XXX Should really reject non-string non-buffers
+    """
+    if isinstance(location, unicode):
+        return urllib.quote(location.encode("utf-8"), safe=":/&?~=")
+    return location
+
+
 # Successful 2xx
 
 def ok(headers, body):
@@ -139,7 +156,7 @@ def created(location, body, headers=None):
         headers = []
     else:
         headers = list(headers)
-    headers.append(('Location', location))
+    headers.append(('Location', quote(location)))
     return Response("201 Created", headers, body)
 
 
@@ -169,7 +186,7 @@ def moved_permanently(location):
     301 status code, some existing HTTP/1.0 user agents will
     erroneously change it into a GET request.
     """
-    return Response("301 Moved Permanently", [('Location', location)], None)
+    return Response("301 Moved Permanently", [('Location', quote(location))], None)
 
 
 def found(location):
@@ -197,7 +214,7 @@ def found(location):
     The status codes 303 and 307 have been added for servers that wish to make
     unambiguously clear which kind of reaction is expected of the client.
     """
-    return Response("302 Found", [('Location', location)], None)
+    return Response("302 Found", [('Location', quote(location))], None)
 
 
 def see_other(location):
@@ -221,7 +238,7 @@ def see_other(location):
     used instead, since most user agents react to a 302 response as described
     here for 303.
     """
-    return Response("303 See Other", [('Location', location)], None)
+    return Response("303 See Other", [('Location', quote(location))], None)
 
 
 def not_modified(headers=None):
