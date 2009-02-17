@@ -99,9 +99,14 @@ class Resource(object):
     def __call__(self, request):
         # Get the dispatchers for the request method.
         dispatchers = self.request_dispatchers.get(request.method)
-        # No dispatchers for method, send 405 with list of allowed methods.
+        # No normal dispatchers for method found,
         if dispatchers is None:
-            return http.method_not_allowed(', '.join(self.request_dispatchers))
+            # Looking for a magic dispatcher
+            dispatchers = self.request_dispatchers.get(ALL.method)
+            # No magic dispatchers found either,
+            # send 405 with list of allowed methods.
+            if dispatchers is None:
+                return http.method_not_allowed(', '.join(self.request_dispatchers))
         # Look up the best dispatcher
         dispatcher = _best_dispatcher(dispatchers, request)
         if dispatcher is not None:
@@ -279,7 +284,10 @@ class MethodDecorator(object):
         setattr(func, _RESTISH_METHOD, self.method)
         setattr(func, _RESTISH_MATCH, self.match)
         return func
-        
+
+class ALL(MethodDecorator):
+    """ every kind of http methods """
+    method = '*'
 
 class DELETE(MethodDecorator):
     """ http DELETE method """

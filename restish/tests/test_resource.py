@@ -42,6 +42,19 @@ class TestResource(unittest.TestCase):
             assert response.status == "200 OK"
             assert response.body == method
 
+    def test_all_methods(self):
+        class Resource(resource.Resource):
+            @resource.ALL()
+            def any(self, request):
+                return http.ok([], request.method)
+        for method in ['GET', 'POST', 'PUT', 'DELETE']:
+            environ = http.Request.blank('/',
+                    environ={'REQUEST_METHOD': method}).environ
+            response = Resource()(http.Request(environ))
+            print response.status, response.body
+            assert response.status == "200 OK", response.status
+            assert response.body == method, method
+
 
 class TestChildLookup(unittest.TestCase):
     
