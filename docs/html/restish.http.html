@@ -241,7 +241,7 @@ when no other response is applicable.</p>
 <dl class="class">
 <dt id="restish.http.Request">
 <!--[restish.http.Request]-->class <tt class="descclassname">restish.http.</tt><tt class="descname">Request</tt><big>(</big><em>environ</em><big>)</big><a class="headerlink" href="#restish.http.Request" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a title="(in Python v2.7)" class="reference" href="http://docs.python.org/dev/library/functions.html#object"><tt class="xref docutils literal"><span class="pre">object</span></tt></a></p>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">webob.Request</span></tt></p>
 <p>HTTP request class.</p>
 <p>The request represents the request from the client and is created by
 passing a WSGI environ dictionary to the initialiser.</p>
@@ -252,11 +252,6 @@ to manipulated easily and safely.</p>
 <dt id="restish.http.Request.application_url">
 <!--[restish.http.Request.application_url]--><tt class="descname">application_url</tt><a class="headerlink" href="#restish.http.Request.application_url" title="Permalink to this definition">¶</a></dt>
 <dd>Return the WSGI application&#8217;s URL.</dd></dl>
-
-<dl class="attribute">
-<dt id="restish.http.Request.blank">
-<!--[restish.http.Request.blank]--><tt class="descname">blank</tt><a class="headerlink" href="#restish.http.Request.blank" title="Permalink to this definition">¶</a></dt>
-<dd>Create a new Request, compatible with webob.Request.blank.</dd></dl>
 
 <dl class="attribute">
 <dt id="restish.http.Request.host_url">
@@ -290,12 +285,13 @@ server, and the query string.</dd></dl>
 <dl class="class">
 <dt id="restish.http.Response">
 <!--[restish.http.Response]-->class <tt class="descclassname">restish.http.</tt><tt class="descname">Response</tt><big>(</big><em>status</em>, <em>headers</em>, <em>body</em><big>)</big><a class="headerlink" href="#restish.http.Response" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a title="(in Python v2.7)" class="reference" href="http://docs.python.org/dev/library/functions.html#object"><tt class="xref docutils literal"><span class="pre">object</span></tt></a></p>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">webob.Response</span></tt></p>
 <p>HTTP response class.</p>
 <p>A Response instance represents the response that will be sent to the client
 and is created by passing a status code, a list of (name, value) headers
 and a body.</p>
-<p>Response is basically just a webob.Response.</p>
+<p>Response is basically just a webob.Response with a modified initializer and
+less implicit behaviour.</p>
 </dd></dl>
 
 <dl class="exception">
@@ -575,6 +571,17 @@ sent in the response without any message-body;</p>
 <p>POST an entity describing or containing the result of the action;</p>
 <p>TRACE an entity containing the request message as received by the end
 server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="restish.http.quote">
+<!--[restish.http.quote]--><tt class="descclassname">restish.http.</tt><tt class="descname">quote</tt><big>(</big><em>location</em><big>)</big><a class="headerlink" href="#restish.http.quote" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quote an unicode location into it&#8217;s correct set of %XX chars.
+socket will not be able to determine the size of the content otherwise.</p>
+<p>[...]
+File &#8220;/usr/lib/python2.5/socket.py&#8221;, line 267, in write</p>
+<blockquote>
+data = str(data) # XXX Should really reject non-string non-buffers</blockquote>
 </dd></dl>
 
 <dl class="function">

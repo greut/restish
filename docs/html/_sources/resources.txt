@@ -161,8 +161,8 @@ passed down from resource to resource.
 
 .. note:: If you want to stop further url traversal, explicitly return no further segments (e.g. ``return Entry(segments[0]), []`` in the Blog example above)
 
-Handling it yourself
---------------------
+Handling the URL matching yourself
+----------------------------------
 
 If you want to handle the url matching yourself then you can use the resource.any matcher. This literally matches any pattern and consumes nothing. This means you have to work out what path segments you want to pass on to the next child. (in this case ``, segments[1:]``)
 
@@ -178,6 +178,31 @@ If you want to handle the url matching yourself then you can use the resource.an
                 return MyMatchingResource(), segments[1:]
 
 
+Handling HTTP methods yourself
+------------------------------
+
+You can also handle the HTTP method dispatching yourself by using the ``resource.ALL`` decorator. This will act as a catchall and get every not existing method. It makes it less readable, but you might gain control depending of your context.
+
+.. code-block:: python
+    
+    class Root(resource.Resource):
+        """ A resource that handles the HEAD http method. """
+
+        @resource.ALL()
+        def all(self, request):
+            if request.method == "GET":
+                ...
+            elif request.method == "HEAD":
+                ...
+            else:
+                http.method_not_allowed("GET, HEAD or POST")
+        
+        @resource.POST()
+        def post(self, request):
+            ...
+
+
+It makes it less readable, but you might gain control depending of your context.
 
 
 Template Resource Matchers

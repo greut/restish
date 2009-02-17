@@ -14,7 +14,6 @@ restish.http.gateway_timeout function restish.http.html
 restish.url.URL.sibling method templating.html
 restish.url.URL.path_segments attribute templating.html
 restish.url.URL.remove_query method templating.html
-restish.http.Request.blank attribute restish.http.html
 restish.http.Request.host_url attribute restish.http.html
 restish.http.see_other function resources.html
 restish.url.URL.add_queries method templating.html
@@ -76,14 +75,16 @@ restish.http.NotFoundError.response_factory attribute restish.http.html
 restish.http.ok function resources.html
 restish.url.URLAccessor.host_url attribute templating.html
 restish.url.URLAccessor.path_qs attribute templating.html
+restish.resource.ALL class restish.resource.html
 restish.guard.GuardError exception restish.guard.html
 restish.error.HTTPServerError exception restish.error.html
 restish.http.created function resources.html
 restish.http.bad_request function resources.html
 restish.templating.Rendering class restish.templating.html
+restish.http.quote function restish.http.html
 restish.http.unauthorized function resources.html
 restish.http.moved_permanently function resources.html
-restish.http.UnauthorizedError exception restish.http.html
+restish.http.not_modified function resources.html
 restish.resource.Resource.resource_child method restish.resource.html
 restish.url.URL.scheme attribute templating.html
 restish.http.GatewayTimeoutError.response_factory attribute restish.http.html
@@ -122,7 +123,7 @@ restish.page.Element class restish.page.html
 restish.http.bad_gateway function restish.http.html
 restish.url.URL.query attribute templating.html
 restish.url.URL.netloc attribute templating.html
-restish.http.not_modified function resources.html
+restish.http.UnauthorizedError exception restish.http.html
 restish.http.forbidden function resources.html
 restish.http.ConflictError.response_factory attribute restish.http.html
 restish.http.not_acceptable function resources.html
