@@ -77,14 +77,13 @@ restish.url.URLAccessor.host_url attribute templating.html
 restish.url.URLAccessor.path_qs attribute templating.html
 restish.resource.ALL class restish.resource.html
 restish.guard.GuardError exception restish.guard.html
-restish.error.HTTPServerError exception restish.error.html
 restish.http.created function resources.html
 restish.http.bad_request function resources.html
 restish.templating.Rendering class restish.templating.html
 restish.http.quote function restish.http.html
 restish.http.unauthorized function resources.html
 restish.http.moved_permanently function resources.html
-restish.http.not_modified function resources.html
+restish.http.UnauthorizedError exception restish.http.html
 restish.resource.Resource.resource_child method restish.resource.html
 restish.url.URL.scheme attribute templating.html
 restish.http.GatewayTimeoutError.response_factory attribute restish.http.html
@@ -98,6 +97,7 @@ restish.url.URLAccessor.path_url attribute templating.html
 restish.url.URLAccessor.application_url attribute templating.html
 restish.url.URL.add_query method templating.html
 restish.url.normalise_path function restish.url.html
+restish.http.not_modified function resources.html
 restish.url.URL.clone method restish.url.html
 restish.http.ServiceUnavailableError exception restish.http.html
 restish.url.URLAccessor.new method restish.url.html
@@ -123,7 +123,7 @@ restish.page.Element class restish.page.html
 restish.http.bad_gateway function restish.http.html
 restish.url.URL.query attribute templating.html
 restish.url.URL.netloc attribute templating.html
-restish.http.UnauthorizedError exception restish.http.html
+restish.error.HTTPServerError exception restish.error.html
 restish.http.forbidden function resources.html
 restish.http.ConflictError.response_factory attribute restish.http.html
 restish.http.not_acceptable function resources.html

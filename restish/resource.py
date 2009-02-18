@@ -285,6 +285,7 @@ class MethodDecorator(object):
         setattr(func, _RESTISH_MATCH, self.match)
         return func
 
+
 class ALL(MethodDecorator):
     """ every kind of http methods """
     method = '*'

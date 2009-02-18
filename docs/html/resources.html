@@ -217,7 +217,7 @@ passed down from resource to resource.</p>
 </div>
 <div class="section" id="handling-http-methods-yourself">
 <h3>Handling HTTP methods yourself<a class="headerlink" href="#handling-http-methods-yourself" title="Permalink to this headline">¶</a></h3>
-<p>You can also handle the HTTP method dispatching yourself by using the <tt class="docutils literal"><span class="pre">resource.ALL</span></tt> decorator. This will act as a catchall and get every not existing method. It makes it less readable, but you might gain control depending of your context.</p>
+<p>You can also handle the HTTP method dispatching yourself by using the <tt class="docutils literal"><span class="pre">resource.ALL</span></tt> decorator. This will act as a catchall and get every not existing method.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; A resource that handles the HEAD http method. &quot;&quot;&quot;</span>
 
@@ -228,14 +228,30 @@ passed down from resource to resource.</p>
         <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;HEAD&quot;</span><span class="p">:</span>
             <span class="o">...</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">http</span><span class="o">.</span><span class="n">method_not_allowed</span><span class="p">(</span><span class="s">&quot;GET, HEAD or POST&quot;</span><span class="p">)</span>
+            <span class="n">http</span><span class="o">.</span><span class="n">method_not_allowed</span><span class="p">(</span><span class="s">&quot;GET, HEAD or POST&quot;</span><span class="p">)</span>
 
     <span class="nd">@resource</span><span class="o">.</span><span class="n">POST</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="o">...</span>
 </pre></div>
 </div>
-<p>It makes it less readable, but you might gain control depending of your context.</p>
+<p>It makes it less readable, but you might gain control depending of your context. <tt class="docutils literal"><span class="pre">&#64;resource.ALL</span></tt> makes sense if you have another method you want to catch, here POST. <tt class="docutils literal"><span class="pre">__call__</span></tt> used alone will act as a catchall too:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A resource that handles GET and HEAD http method. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;GET&quot;</span><span class="p">:</span>
+            <span class="o">...</span>
+        <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;HEAD&quot;</span><span class="p">:</span>
+            <span class="o">...</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">http</span><span class="o">.</span><span class="n">method_not_allowed</span><span class="p">(</span><span class="s">&quot;GET, HEAD&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><tt class="docutils literal"><span class="pre">__call__</span></tt> is stronger than <tt class="docutils literal"><span class="pre">&#64;resource.ALL</span></tt>.</p>
+</div>
 </div>
 <div class="section" id="template-resource-matchers">
 <h3>Template Resource Matchers<a class="headerlink" href="#template-resource-matchers" title="Permalink to this headline">¶</a></h3>

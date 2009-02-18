@@ -45,15 +45,29 @@ class TestResource(unittest.TestCase):
     def test_all_methods(self):
         class Resource(resource.Resource):
             @resource.ALL()
-            def any(self, request):
-                return http.ok([], request.method)
-        for method in ['GET', 'POST', 'PUT', 'DELETE']:
+            def all(self, request):
+                if request.method == "DELETE":
+                    return http.ok([], "THERE IS NO DELETE")
+                else:
+                    return http.ok([], request.method)
+
+            @resource.POST()
+            def post(self, request):
+                return http.ok([], "HERE IS THE POST")
+
+        tests = [('GET', 'GET'),
+                 ('POST', 'HERE IS THE POST'),
+                 ('PUT', 'PUT'),
+                 ('DELETE', 'THERE IS NO DELETE')
+                ]
+        
+        for method, body  in tests:
             environ = http.Request.blank('/',
-                    environ={'REQUEST_METHOD': method}).environ
+                    environ={"REQUEST_METHOD": method}).environ
             response = Resource()(http.Request(environ))
-            print response.status, response.body
+            #print response.status, response.body
             assert response.status == "200 OK", response.status
-            assert response.body == method, method
+            assert response.body == body, body
 
 
 class TestChildLookup(unittest.TestCase):

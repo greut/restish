@@ -181,7 +181,7 @@ If you want to handle the url matching yourself then you can use the resource.an
 Handling HTTP methods yourself
 ------------------------------
 
-You can also handle the HTTP method dispatching yourself by using the ``resource.ALL`` decorator. This will act as a catchall and get every not existing method. It makes it less readable, but you might gain control depending of your context.
+You can also handle the HTTP method dispatching yourself by using the ``resource.ALL`` decorator. This will act as a catchall and get every not existing method.
 
 .. code-block:: python
     
@@ -195,15 +195,29 @@ You can also handle the HTTP method dispatching yourself by using the ``resource
             elif request.method == "HEAD":
                 ...
             else:
-                http.method_not_allowed("GET, HEAD or POST")
+                http.method_not_allowed("GET, HEAD or POST")
         
         @resource.POST()
         def post(self, request):
             ...
 
 
-It makes it less readable, but you might gain control depending of your context.
+It makes it less readable, but you might gain control depending of your context. ``@resource.ALL`` makes sense if you have another method you want to catch, here POST. ``__call__`` used alone will act as a catchall too:
 
+.. code-block:: python
+    
+    class Root(resource.Resource):
+        """ A resource that handles GET and HEAD http method. """
+
+        def __call__(self, request):
+            if request.method == "GET":
+                ...
+            elif request.method == "HEAD":
+                ...
+            else:
+                http.method_not_allowed("GET, HEAD")
+
+.. note:: ``__call__`` is stronger than ``@resource.ALL``.
 
 Template Resource Matchers
 --------------------------
