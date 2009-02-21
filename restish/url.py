@@ -120,8 +120,12 @@ class URL(str):
                     password = urllib.quote(parts.password.encode("utf-8"))
                     username = username + ":" + password
                 hostname = username + "@" + hostname
+            # add the port
+            if parts.port:
+                hostname += ":" + str(parts.port)
+
             # Deal with the other parts
-            path = urllib.quote(parts.path.encode("utf-8"), safe="/")
+            path = urllib.quote(parts.path.encode("utf-8"), safe="/:~")
             query = urllib.quote(parts.query.encode("utf-8"), safe="=&")
             # And rebuild it
             url = urlparse.urlunsplit([parts.scheme,

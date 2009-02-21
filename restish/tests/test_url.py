@@ -452,6 +452,15 @@ class TestURL(unittest.TestCase):
         pound = url.URL(u'http://en.wikipedia.org/wiki/£')
         assert pound == 'http://en.wikipedia.org/wiki/%C2%A3'
 
+        qs = url.URL(u'http://en.wikipedia.org/wiki/Special:Search?search=£&fulltext=Search')
+        assert qs == 'http://en.wikipedia.org/wiki/Special:Search?search=%C2%A3&fulltext=Search'
+
+        port = url.URL(u'http://example.org:1234/~yoan')
+        assert port == 'http://example.org:1234/~yoan'
+
+        auth = url.URL(u'http://yoan:blanc@example.org/')
+        assert auth == 'http://yoan:blanc@example.org/'
+
 
 class Serialization(unittest.TestCase):
 
