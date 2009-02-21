@@ -103,21 +103,44 @@ class URL(str):
     components are UTF-8 encoded on the way in and always returned as unicode
     instances. Note however that the URL itself is a byte string.
     """
-
-    def __init__(self, url):
-        """
-        Create a new URL instance from a str URL.
-        """
-        str.__init__(url)
+    
+    def __new__(cls, url):
+        if isinstance(url, cls):
+            return url
+        
+        if isinstance(url, unicode):
+            # break it
+            parts = urlparse.urlsplit(url)
+            # Apply puny-code to hostname
+            hostname = parts.hostname.encode("idna")
+            # Fix auth part if needed
+            if parts.username or parts.password:
+                username = urllib.quote(parts.username.encode("utf-8"))
+                if parts.password:
+                    password = urllib.quote(parts.password.encode("utf-8"))
+                    username = username + ":" + password
+                hostname = username + "@" + hostname
+            # Deal with the other parts
+            path = urllib.quote(parts.path.encode("utf-8"), safe="/")
+            query = urllib.quote(parts.query.encode("utf-8"), safe="=&")
+            # And rebuild it
+            url = urlparse.urlunsplit([parts.scheme,
+                                       hostname,
+                                       path,
+                                       query,
+                                       parts.fragment])
+        
+        self = str.__new__(cls, url)
         self.parsed_url = urlparse.urlsplit(url)
-
+        return self
+    
     def __eq__(self, other):
         if isinstance(other, URL):
             return self.parsed_url == other.parsed_url
         elif isinstance(other, str):
             return self.parsed_url == urlparse.urlsplit(other)
         return False
-
+    
     @property
     def scheme(self):
         """ The url scheme (http, https, etc) """

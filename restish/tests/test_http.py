@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 import unittest
 
 from restish import http, url
@@ -78,6 +79,11 @@ class TestSuccessResponseFactories(unittest.TestCase):
         r = http.found(location)
         assert r.status.startswith('302')
         assert r.headers['Location'] == location
+
+        location = u'http://☃.net/'
+        r = http.found(location)
+        assert r.status.startswith('302')
+        assert r.headers['Location'] == 'http://xn--n3h.net/'
 
     def test_see_other(self):
         location = 'http://localhost/abc'

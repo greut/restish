@@ -1,4 +1,4 @@
-# -*- coding: utf-8
+# -*- coding: utf-8 -*-
 
 # Copyright (c) 2004-2007 Divmod.
 # See LICENSE for details.
@@ -101,7 +101,7 @@ class TestUtils(unittest.TestCase):
 
 
 class TestURL(unittest.TestCase):
-
+    
     def test_properties(self):
         u = url.URL("http://localhost:1234/a/b/c?d&e=f#g")
         self.assertEquals(u.scheme, 'http')
@@ -444,6 +444,13 @@ class TestURL(unittest.TestCase):
         path_qs = url.URL('http://localhost:1234/foo?a=b#c').path_qs
         assert isinstance(path_qs, url.URL)
         assert path_qs == '/foo?a=b#c'
+    
+    def test_unicode(self):
+        snowman = url.URL(u'http://☃.net/')
+        assert snowman == 'http://xn--n3h.net/'
+
+        pound = url.URL(u'http://en.wikipedia.org/wiki/£')
+        assert pound == 'http://en.wikipedia.org/wiki/%C2%A3'
 
 
 class Serialization(unittest.TestCase):
