@@ -257,6 +257,7 @@ restish/tests/test_guard.py
 restish/tests/test_http.py
 restish/tests/test_page.py
 restish/tests/test_resource.py
+restish/tests/test_streaming.py
 restish/tests/test_templating.py
 restish/tests/test_url.py
 restish/tests/util.py
