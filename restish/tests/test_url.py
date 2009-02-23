@@ -461,6 +461,9 @@ class TestURL(unittest.TestCase):
         auth = url.URL(u'http://yoan:blanc@example.org/')
         assert auth == 'http://yoan:blanc@example.org/'
 
+        relative = url.URL(u'/~yoan?currency=€')
+        assert relative == '/~yoan?currency=%E2%82%AC'
+
 
 class Serialization(unittest.TestCase):
 

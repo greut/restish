@@ -112,7 +112,10 @@ class URL(str):
             # break it
             parts = urlparse.urlsplit(url)
             # Apply puny-code to hostname
-            hostname = parts.hostname.encode("idna")
+            if parts.hostname:
+                hostname = parts.hostname.encode("idna")
+            else:
+                hostname = None
             # Fix auth part if needed
             if parts.username or parts.password:
                 username = urllib.quote(parts.username.encode("utf-8"))
