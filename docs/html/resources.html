@@ -180,12 +180,12 @@ passed down from resource to resource.</p>
 
     <span class="nd">@resource</span><span class="o">.</span><span class="n">child</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">segments</span><span class="p">):</span>
-        <span class="c"># The segments contain everything below /blog/entries</span>
+        <span class="c"># &#39;segments&#39; contains everything below /blog/entries</span>
         <span class="c"># Pass the first segment through to Entry (should be entry id)</span>
-        <span class="c"># The empty tuple says pass no more segments to Entry</span>
+        <span class="c"># The empty list says pass no more segments to Entry</span>
         <span class="k">return</span> <span class="n">Entry</span><span class="p">(</span><span class="n">segments</span><span class="p">[</span><span class="mf">0</span><span class="p">]),</span> <span class="p">[]</span>
 
-<span class="k">class</span> <span class="nc">Entries</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Entry</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
@@ -219,7 +219,7 @@ passed down from resource to resource.</p>
 <h3>Handling HTTP methods yourself<a class="headerlink" href="#handling-http-methods-yourself" title="Permalink to this headline">¶</a></h3>
 <p>You can also handle the HTTP method dispatching yourself by using the <tt class="docutils literal"><span class="pre">resource.ALL</span></tt> decorator. This will act as a catchall and get every not existing method.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; A resource that handles the HEAD http method. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; A resource that handles the GET, HEAD and POST http methods. &quot;&quot;&quot;</span>
 
     <span class="nd">@resource</span><span class="o">.</span><span class="n">ALL</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
@@ -237,7 +237,7 @@ passed down from resource to resource.</p>
 </div>
 <p>It makes it less readable, but you might gain control depending of your context. <tt class="docutils literal"><span class="pre">&#64;resource.ALL</span></tt> makes sense if you have another method you want to catch, here POST. <tt class="docutils literal"><span class="pre">__call__</span></tt> used alone will act as a catchall too:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">Resource</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; A resource that handles GET and HEAD http method. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; A resource that handles GET and HEAD http methods. &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&quot;GET&quot;</span><span class="p">:</span>
@@ -250,7 +250,7 @@ passed down from resource to resource.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last"><tt class="docutils literal"><span class="pre">__call__</span></tt> is stronger than <tt class="docutils literal"><span class="pre">&#64;resource.ALL</span></tt>.</p>
+<p class="last"><tt class="docutils literal"><span class="pre">__call__</span></tt> is more direct than <tt class="docutils literal"><span class="pre">&#64;resource.ALL</span></tt> and be called instead of any other resources (like <tt class="docutils literal"><span class="pre">&#64;resource.GET</span></tt>).</p>
 </div>
 </div>
 <div class="section" id="template-resource-matchers">

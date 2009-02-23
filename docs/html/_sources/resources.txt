@@ -143,12 +143,12 @@ passed down from resource to resource.
 
         @resource.child()
         def entries(self, request, segments):
-            # The segments contain everything below /blog/entries
+            # 'segments' contains everything below /blog/entries
             # Pass the first segment through to Entry (should be entry id) 
-            # The empty tuple says pass no more segments to Entry
+            # The empty list says pass no more segments to Entry
             return Entry(segments[0]), []
 
-    class Entries(resource.Resource):
+    class Entry(resource.Resource):
 
         def __init__(self, id):
             self.id = id
@@ -186,7 +186,7 @@ You can also handle the HTTP method dispatching yourself by using the ``resource
 .. code-block:: python
     
     class Root(resource.Resource):
-        """ A resource that handles the HEAD http method. """
+        """ A resource that handles the GET, HEAD and POST http methods. """
 
         @resource.ALL()
         def all(self, request):
@@ -207,7 +207,7 @@ It makes it less readable, but you might gain control depending of your context.
 .. code-block:: python
     
     class Root(resource.Resource):
-        """ A resource that handles GET and HEAD http method. """
+        """ A resource that handles GET and HEAD http methods. """
 
         def __call__(self, request):
             if request.method == "GET":
@@ -217,7 +217,9 @@ It makes it less readable, but you might gain control depending of your context.
             else:
                 http.method_not_allowed("GET, HEAD")
 
-.. note:: ``__call__`` is stronger than ``@resource.ALL``.
+
+.. note:: ``__call__`` is more direct than ``@resource.ALL`` and be called instead of any other resources (like ``@resource.GET``).
+
 
 Template Resource Matchers
 --------------------------
