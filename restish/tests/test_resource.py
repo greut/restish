@@ -135,7 +135,7 @@ class TestChildLookup(unittest.TestCase):
                  ('/implicitly_named_child', 'implicitly_named_child'),
                  ('/implicitly_named_child_with_templating', 'implicitly_named_child_with_templating'),
                 ]
-        environ = {'restish.templating.renderer': renderer}
+        environ = {'restish.templating': templating.Templating(renderer)}
         
         A = app.RestishApp(Resource())
         for url, expected in tests:
