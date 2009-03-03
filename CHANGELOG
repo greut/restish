@@ -2,8 +2,8 @@
 Changelog
 =========
 
-0.8dev (unreleased)
--------------------
+0.8 (2009-03-02)
+----------------
 
 * Rewrote/refactored restish.templating to be more flexible, less weird ;-) and
   to make resources need no direct relation to an application's lib.templating
@@ -15,6 +15,10 @@ Changelog
   subclass webob's classes avoiding lots of getattr() calls; restish.app now
   uses the PATH_INFO from the WSGI environ instead of creating a number of URL
   instances to work out the same thing.
+* Added Request.application_path as a convenience for getting the path part of
+  the application's root URL.
+* Added the ApplicationURLAccessor contrib util, an attempt to make it easy for
+  an application to define and create its fixed/canonical URLs.
 * Added Tempita templating renderer "contrib" module.
 
 

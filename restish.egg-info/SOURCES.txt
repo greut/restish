@@ -107,6 +107,7 @@ restish/resource.py
 restish/templating.py
 restish/url.py
 restish/util.py
+restish.egg-info/.SOURCES.txt.swp
 restish.egg-info/PKG-INFO
 restish.egg-info/SOURCES.txt
 restish.egg-info/dependency_links.txt
@@ -115,10 +116,12 @@ restish.egg-info/not-zip-safe
 restish.egg-info/requires.txt
 restish.egg-info/top_level.txt
 restish/contrib/__init__.py
+restish/contrib/appurl.py
 restish/contrib/genshirenderer.py
 restish/contrib/jinja2renderer.py
 restish/contrib/makorenderer.py
 restish/contrib/noseutils.py
+restish/contrib/tempitarenderer.py
 restish/pastertemplate/development.ini_tmpl
 restish/pastertemplate/live.ini_tmpl
 restish/pastertemplate/setup.py_tmpl
