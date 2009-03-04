@@ -56,6 +56,14 @@ class TestUrlFor(unittest.TestCase):
             #print path, response["body"]
             assert response["status"].startswith("200")
             assert response["body"] == body
+        
+        tests = [(Index, '/index'),
+                 (Blog, '/blog'),
+                 (Entry, '/blog/entry')
+                ]
+
+        for klass, url in tests:
+            assert resource.url_for(klass) == url, "%s != %s" % (url, resource.url_for(klass))
 
 
 if __name__ == "__main__":

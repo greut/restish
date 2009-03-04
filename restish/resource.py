@@ -5,7 +5,7 @@ import inspect
 import mimetypes
 import re
 
-from restish import http, _mimeparse as mimeparse
+from restish import http, url, _mimeparse as mimeparse
 
 
 _RESTISH_CHILD = "restish_child"
@@ -49,6 +49,18 @@ def child(matcher=None, klass=None):
         setattr(func, _RESTISH_CHILD, matcher)
         setattr(func, _RESTISH_CHILD_CLASS, klass)
         return func
+
+def url_for(cls):
+    """
+    Contruct an URL going up from the given resource class to the root.
+    """
+    parents = []
+    while hasattr(cls, '_parent'):
+        parents.append(cls._parent.child_matchers.get(cls, None).pattern)
+        cls = cls._parent
+    parents.reverse()
+    return url.URL('/').child(*parents)
+    
 
 class TemplateChildMatcher(object):
     """
@@ -220,11 +232,21 @@ def _gather_child_factories(cls, clsattrs):
     annotation = _RESTISH_CHILD
     # Copy the super class's 'child_factories' list (if any) to this class.
     cls.child_factories = list(getattr(cls, 'child_factories', []))
-    # Extend child_factories to include the ones found on this class.
+    # A way to find the name of its childs quickly
+    cls.child_matchers = {}
+    # Complete the childs built using the declarative way
     for name, func in clsattrs.iteritems():
+        # childs with no names
         if hasattr(func, annotation) and getattr(func, annotation, None) is None:
             setattr(func, annotation, TemplateChildMatcher(name))
+        # childs with no daddies
+        if hasattr(func, _RESTISH_CHILD_CLASS):
+            child_cls = getattr(func, _RESTISH_CHILD_CLASS)
+            # who's your daddy
+            child_cls._parent = cls
+            cls.child_matchers[child_cls] = getattr(func, annotation, None)
     
+    # Extend child_factories to include the ones found on this class.
     child_factories = _find_annotated_funcs(clsattrs, annotation)
     cls.child_factories.extend((getattr(f, annotation), f)
                                for f in child_factories)
