@@ -240,6 +240,8 @@ restish/contrib/genshirenderer.py
 restish/contrib/jinja2renderer.py
 restish/contrib/makorenderer.py
 restish/contrib/tempitarenderer.py
+restish/ext/__init__.py
+restish/ext/urlfor.py
 restish/pastertemplate/+package+.ini_tmpl
 restish/pastertemplate/development.ini_tmpl
 restish/pastertemplate/live.ini_tmpl
@@ -262,4 +264,5 @@ restish/tests/test_resource.py
 restish/tests/test_streaming.py
 restish/tests/test_templating.py
 restish/tests/test_url.py
+restish/tests/test_urlfor.py
 restish/tests/util.py
