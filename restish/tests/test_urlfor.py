@@ -57,15 +57,124 @@ class TestUrlFor(unittest.TestCase):
             assert response["status"].startswith("200")
             assert response["body"] == body
         
-        tests = [(Index, '/index'),
+        tests = [(Resource, '/'),
+                 (Index, '/index'),
                  (Blog, '/blog'),
                  (Entry, '/blog/entry')
                 ]
 
         for klass, url in tests:
             assert resource.url_for(klass) == url, "%s != %s" % (url, resource.url_for(klass))
+    
+    def test_with_matchers(self):
+        class Entry(resource.Resource):
+            def __init__(self, id, slug):
+                self.id = id
+                self.slug = slug
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], 'entry (%s): %s' % (self.id, self.slug))
+
+        class Blog(resource.Resource):
+            def __init__(self, blogname):
+                self.blogname = blogname
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], 'blog: %s' % self.blogname)
+
+            entry = resource.child("{id}/{slug}", Entry)
+ 
+        class Resource(resource.Resource):
+            @resource.GET()
+            def index(self, request):
+                return http.ok([], 'index')
+
+            blog = resource.child('{blogname}', Blog)
+
+        tests = [('/', 'index'),
+                 ('/blog', 'blog: blog'),
+                 ('/wordpress', 'blog: wordpress'),
+                 ('/blog/1/hello world', 'entry (1): hello world'),
+                 ('/wordpress/2/hello world', 'entry (2): hello world')
+                ]
+        
+        A = app.RestishApp(Resource())
+        for path, body in tests:
+            environ = http.Request.blank(path).environ
+            response = wsgi_out(A, environ)
+            #print path, response["body"]
+            assert response["status"].startswith("200")
+            assert response["body"] == body
+        
+        
+        tests = [((Resource, {}), '/'),
+                 ((Blog, {'blogname': 'b2'}), '/b2'),
+                 ((Entry, {'blogname': 'b2evolution',
+                           'id': '1',
+                           'slug': 'foo'}),
+                  '/b2evolution/1/foo')
+                ]
+
+        for (klass, args), url in tests:
+            assert resource.url_for(klass, **args) == url, url
+
+    def test_with_regexp(self):
+        class Entry(resource.Resource):
+            def __init__(self, id, slug):
+                self.id = id
+                self.slug = slug
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], 'entry (%s): %s' % (self.id, self.slug))
+
+        class Blog(resource.Resource):
+            def __init__(self, blogname):
+                self.blogname = blogname
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], 'blog: %s' % self.blogname)
+
+            entry = resource.child("_{id:[0-9]+}_/slug-{slug}", Entry)
+ 
+        class Resource(resource.Resource):
+            @resource.GET()
+            def index(self, request):
+                return http.ok([], 'index')
+
+            blog = resource.child('{blogname:[a-z]{4,}}-is-a-blog', Blog)
+
+        tests = [('/', 'index'),
+                 ('/blog-is-a-blog', 'blog: blog'),
+                 ('/wordpress-is-a-blog', 'blog: wordpress'),
+                 ('/blog-is-a-blog/_1_/slug-hello world', 'entry (1): hello world'),
+                 ('/wordpress-is-a-blog/_2_/slug-hello world', 'entry (2): hello world')
+                ]
+        
+        A = app.RestishApp(Resource())
+        for path, body in tests:
+            environ = http.Request.blank(path).environ
+            response = wsgi_out(A, environ)
+            #print path, response["body"]
+            assert response["status"].startswith("200")
+            assert response["body"] == body
+        
+        
+        tests = [((Resource, {}), '/'),
+                 ((Blog, {'blogname': 'b2'}), '/b2-is-a-blog'),
+                 ((Entry, {'blogname': 'b2evolution',
+                           'id': '1',
+                           'slug': 'foo'}),
+                  '/b2evolution-is-a-blog/_1_/slug-foo')
+                ]
+
+        for (klass, args), url in tests:
+            assert resource.url_for(klass, **args) == url, url
 
 
 if __name__ == "__main__":
-    import nose
-    nose.run([], [__file__])
+    unittest.main()
+

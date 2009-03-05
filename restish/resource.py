@@ -50,15 +50,21 @@ def child(matcher=None, klass=None):
         setattr(func, _RESTISH_CHILD_CLASS, klass)
         return func
 
-def url_for(cls):
+def url_for(cls, **kwargs):
     """
     Contruct an URL going up from the given resource class to the root.
     """
     parents = []
     while hasattr(cls, '_parent'):
-        parents.append(cls._parent.child_matchers.get(cls, None).pattern)
+        segments = cls._parent.child_matchers.get(cls, None)._url_for(**kwargs)
+        segments.reverse()
+        parents += segments
         cls = cls._parent
-    parents.reverse()
+    if len(parents):
+        parents.reverse()
+    else:
+        parents = ['']
+    
     return url.URL('/').child(*parents)
     
 
@@ -67,47 +73,73 @@ class TemplateChildMatcher(object):
     A @child matcher that parses a template in the form /fixed/{dynamic}/fixed,
     extracting segments inside {} markers.
     """
-
+    SPLITTER = '/'
+    MARKERS = '{', '}'
+    
     def __init__(self, pattern):
         self.pattern = pattern
         self._calc_score()
         self._compile()
 
     def _calc_score(self):
-        """ Return the score for this element """
+        """Return the score for this element"""
         def score(segment):
-            if len(segment) >= 2 and segment.find('{') + segment.find('}') != \
-                -2:
+            if len(segment) >= 2 and (segment.find(self.MARKERS[0]) +
+                                      segment.find(self.MARKERS[1]) != -2):
                 return 0
             return 1
-        segments = self.pattern.split('/')
+        segments = self.pattern.split(self.SPLITTER)
         self.score = tuple(score(segment) for segment in segments)
     
     def _build_regex(self):
-        """ Build the regex from the pattern """
+        """Build the regex from the pattern"""
         def re_segments(segments):
             for segment in segments:
-                if len(segment) >= 2 and segment.find("{") + \
-                    segment.find("}") != -2:
-                    prefix, rest = segment.split("{", 1)
-                    var, suffix = rest.rsplit("}", 1)
+                if len(segment) >= 2 and (segment.find(self.MARKERS[0]) +
+                                          segment.find(self.MARKERS[1]) != -2):
+                    prefix, rest = segment.split(self.MARKERS[0], 1)
+                    var, suffix = rest.rsplit(self.MARKERS[1], 1)
                     pos = var.find(":")
                     if ~pos:
-                        regex = '%s(?P<%s>%s)%s' % (prefix, var[:pos], \
-                            var[pos+1:], suffix)
+                        regex = '%s(?P<%s>%s)%s' % (prefix, var[:pos],
+                                                    var[pos+1:], suffix)
                     else:
-                        regex = r'%s(?P<%s>[^/]+)%s' % (prefix, var, suffix)
+                        regex = r'%s(?P<%s>[^%s]+)%s' % (prefix, var,
+                                                         self.SPLITTER, suffix)
                     yield regex
                 else:
                     yield segment
 
-        segments = self.pattern.split('/')
+        segments = self.pattern.split(self.SPLITTER)
         self._count = len(segments)
-        return '/'.join(re_segments(segments))
+        return self.SPLITTER.join(re_segments(segments))
+
+    def _build_url(self):
+        """Generate an URL from the matcher"""
+        segments = self.pattern.split(self.SPLITTER)
+        def re_segments(segments):
+            for segment in segments:
+                if len(segment) >= 2 and (segment.find(self.MARKERS[0]) +
+                                          segment.find(self.MARKERS[1]) != -2):
+                    prefix, rest = segment.split(self.MARKERS[0], 1)
+                    var, suffix = rest.rsplit(self.MARKERS[1], 1)
+                    pos = var.find(":")
+                    if ~pos:
+                        yield '%s%%(%s)s%s' % (prefix, var[:pos], suffix)
+                    else:
+                        yield '%s%%(%s)s%s' % (prefix, var, suffix)
+                else:
+                    yield segment
+        
+        return re_segments(segments)
 
     def _compile(self):
-        """ compile the regexp to match segments """
+        """Compile the regexp to match segments"""
         self._regex = re.compile('^' + self._build_regex() + '$')
+    
+    def _url_for(self, **kwargs):
+        """Compile the URL with the given arguments."""
+        return [segment % kwargs for segment in self._build_url()]
 
     def __call__(self, request, segments):
         match_segments, remaining_segments = \
