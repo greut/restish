@@ -162,7 +162,6 @@ class TestUrlFor(unittest.TestCase):
             assert response["status"].startswith("200")
             assert response["body"] == body
         
-        
         tests = [((Resource, {}), '/'),
                  ((Blog, {'blogname': 'b2'}), '/b2-is-a-blog'),
                  ((Entry, {'blogname': 'b2evolution',
@@ -173,6 +172,37 @@ class TestUrlFor(unittest.TestCase):
 
         for (klass, args), url in tests:
             assert resource.url_for(klass, **args) == url, url
+    
+    def test_canonical(self):
+        class Book(resource.Resource):
+            def __init__(self, title, **kwargs):
+                self.title = title
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], self.title)
+
+        class Resource(resource.Resource):
+            category = resource.child("category/{category}/{title}", Book)
+            permalink = resource.child("book/{title}", Book, canonical=True)
+            shortlink = resource.child("b/{title}", Book)
+            bydate = resource.child("{year}/{month}/{day}/{title}", Book)
+        
+        tests = [("/book/foo", "foo"),
+                 ("/b/foo", "foo"),
+                 ("/category/sleepy/foo", "foo"),
+                 ("/2009/11/08/foo", "foo")
+                ]
+
+        A = app.RestishApp(Resource())
+        for path, body in tests:
+            environ = http.Request.blank(path).environ
+            response = wsgi_out(A, environ)
+            #print path, response["body"]
+            assert response["status"].startswith("200")
+            assert response["body"] == body
+        
+        assert resource.url_for(Book, title="foo") == "/book/foo"
 
 
 if __name__ == "__main__":

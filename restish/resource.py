@@ -19,7 +19,7 @@ SHORT_CONTENT_TYPE_EXTRA = {
         }
 
 
-def child(matcher=None, klass=None):
+def child(matcher=None, klass=None, canonical=False):
     if klass is None and not isinstance(matcher, _metaResource):
         """ Child decorator used for finding child resources """
         def decorator(func, matcher=matcher):
@@ -37,6 +37,7 @@ def child(matcher=None, klass=None):
         return decorator
     else:
         if klass is None:
+            canonical = klass
             klass = matcher
             matcher = None
         
@@ -44,7 +45,7 @@ def child(matcher=None, klass=None):
             return klass(*args, **kwargs), segments
         
         if isinstance(matcher, str):
-            matcher = TemplateChildMatcher(matcher)
+            matcher = TemplateChildMatcher(matcher, canonical)
         
         setattr(func, _RESTISH_CHILD, matcher)
         setattr(func, _RESTISH_CHILD_CLASS, klass)
@@ -76,8 +77,9 @@ class TemplateChildMatcher(object):
     SPLITTER = '/'
     MARKERS = '{', '}'
     
-    def __init__(self, pattern):
+    def __init__(self, pattern, canonical=False):
         self.pattern = pattern
+        self.canonical = canonical
         self._calc_score()
         self._compile()
 
@@ -276,7 +278,9 @@ def _gather_child_factories(cls, clsattrs):
             child_cls = getattr(func, _RESTISH_CHILD_CLASS)
             # who's your daddy
             child_cls._parent = cls
-            cls.child_matchers[child_cls] = getattr(func, annotation, None)
+            matcher = getattr(func, annotation, None)
+            if child_cls not in cls.child_matchers or matcher.canonical:
+                cls.child_matchers[child_cls] = matcher
     
     # Extend child_factories to include the ones found on this class.
     child_factories = _find_annotated_funcs(clsattrs, annotation)
