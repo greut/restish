@@ -51,23 +51,21 @@ def child(matcher=None, klass=None, canonical=False):
         setattr(func, _RESTISH_CHILD_CLASS, klass)
         return func
 
+
 def url_for(cls, **kwargs):
     """
     Contruct an URL going up from the given resource class to the root.
     """
-    parents = []
-    while hasattr(cls, '_parent'):
-        segments = cls._parent.child_matchers.get(cls, None)._url_for(**kwargs)
-        segments.reverse()
-        parents += segments
-        cls = cls._parent
-    if len(parents):
-        parents.reverse()
+    if isinstance(cls, basestring):
+        classname = cls.lower()
+        cls = Resource._resources.get(classname, None)
+    
+    # Root resource isn't in.
+    if cls is not None:
+        return cls.urlfor(**kwargs)
     else:
-        parents = ['']
-    
-    return url.URL('/').child(*parents)
-    
+        return Resource.urlfor()
+
 
 class TemplateChildMatcher(object):
     """
@@ -281,6 +279,7 @@ def _gather_child_factories(cls, clsattrs):
             matcher = getattr(func, annotation, None)
             if child_cls not in cls.child_matchers or matcher.canonical:
                 cls.child_matchers[child_cls] = matcher
+                cls._resources[child_cls.__name__.lower()] = child_cls
     
     # Extend child_factories to include the ones found on this class.
     child_factories = _find_annotated_funcs(clsattrs, annotation)
@@ -313,7 +312,9 @@ class Resource(object):
     """
 
     __metaclass__ = _metaResource
-    
+
+    _resources = {}
+
     def __init__(self, *args, **kwargs):
         pass
     
@@ -369,6 +370,25 @@ class Resource(object):
         # No match, send 406
         return http.not_acceptable([('Content-Type', 'text/plain')], \
                                    '406 Not Acceptable')
+    
+    @classmethod
+    def urlfor(cls, **kwargs):
+        """
+        URL of this resource built using the given arguments
+        """
+        parents = []
+                
+        while hasattr(cls, '_parent'):
+            segments = cls._parent.child_matchers.get(cls, None)._url_for(**kwargs)
+            segments.reverse()
+            parents += segments
+            cls = cls._parent
+        if len(parents):
+            parents.reverse()
+        else:
+            parents = ['']
+        
+        return url.URL('/').child(*parents)
 
 
 def _best_dispatcher(dispatchers, request):
