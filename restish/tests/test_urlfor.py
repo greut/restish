@@ -219,6 +219,36 @@ class TestUrlFor(unittest.TestCase):
         
         assert resource.url_for(Book, title="4") == "/book/4"
         assert resource.url_for("book", title="5") == "/book/5"
+        # TODO: pass those
+        #assert resource.url_for("book", category="animal", title="6") == "/category/animal/6"
+        #assert resource.url_for("book", year="2009", month="03", day="09", title="7") == "/2009/03/09/7"
+    
+    
+    # TODO: One day, maybe in a world of flying unicode ponies
+    #def test_unicode(self):
+    #    class Moo(resource.Resource):
+    #        def __init__(self, arg):
+    #            self.arg = arg
+    #
+    #        def __call__(self, segments):
+    #            return http.ok([], self.arg)
+    #
+    #    class Root(resource.Resource):
+    #        moo = resource.child(u"£-{arg}", Moo)
+    #    
+    #    tests = [(u"/£-a", u"a"),
+    #             (u"/£-ä", u"ä")
+    #            ]
+    #
+    #    A = app.RestishApp(Root())
+    #    for path, body in tests:
+    #        environ = http.Request.blank(path).environ
+    #        response = wsgi_out(A, environ)
+    #        print path, response["body"]
+    #        assert response["status"].startswith("200")
+    #        assert response["body"] == body
+    #
+    #    assert Moo._url_for(args=u"ä") == u"/£-ä"
 
 
 if __name__ == "__main__":

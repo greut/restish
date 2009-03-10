@@ -62,9 +62,9 @@ def url_for(cls, **kwargs):
     
     # Root resource isn't in.
     if cls is not None:
-        return cls.urlfor(**kwargs)
+        return cls._url_for(**kwargs)
     else:
-        return Resource.urlfor()
+        return Resource._url_for()
 
 
 class TemplateChildMatcher(object):
@@ -372,7 +372,7 @@ class Resource(object):
                                    '406 Not Acceptable')
     
     @classmethod
-    def urlfor(cls, **kwargs):
+    def _url_for(cls, **kwargs):
         """
         URL of this resource built using the given arguments
         """
