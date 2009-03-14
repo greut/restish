@@ -276,6 +276,9 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('a{b}c')
             def _8(self, request, segments, b):
                 return make_resource('a{b}c'), []
+            @resource.child('.+([^0-9])*|\S')
+            def _9(self, request, segments):
+                return make_resource('regexp-like'), []
             @resource.child(resource.any)
             def any(self, request, segments):
                 return make_resource('any'), []
@@ -288,6 +291,7 @@ class TestChildLookup(unittest.TestCase):
                 ('/a', 'a'),
                 ('/foo/b/c', '{a}/b/c'),
                 ('/abc', 'a{b}c'),
+                ('/.+([^0-9])*|\S', 'regexp-like'),
                 ('/foo', 'any'),
                 ]
         A = app.RestishApp(Resource())

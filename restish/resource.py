@@ -221,8 +221,10 @@ class TemplateChildMatcher(object):
     @staticmethod
     def _re_safe(s):
         """Make a safe expression to be used into a regexp"""
-        return s.replace("+", r"\+").replace("*", r"\*").replace("?", r"\?")
-    
+        for c in r'\+*()[].^|':
+            s = s.replace(c, r'\%s' % c)
+        return s
+
     def _build_regex(self):
         """Build the regex from the pattern"""
         def re_segments(segments):
@@ -235,7 +237,6 @@ class TemplateChildMatcher(object):
                     # make them regexp safe
                     prefix = self._re_safe(prefix)
                     suffix = self._re_safe(suffix)
-                    
                     if ~pos:
                         regex = '%s(?P<%s>%s)%s' % (prefix,
                                                     var[:pos],
@@ -247,10 +248,11 @@ class TemplateChildMatcher(object):
                                                         suffix)
                     yield regex
                 else:
-                    yield segment
+                    yield self._re_safe(segment)
 
         segments = self.pattern.split('/')
         self._count = len(segments)
+        print '/'.join(re_segments(segments))
         return '/'.join(re_segments(segments))
 
     def _compile(self):
