@@ -28,7 +28,7 @@ def child(matcher=None, klass=None, canonical=False):
                 matcher = func.__name__
             # If the matcher is a string then create a TemplateChildMatcher in its
             # place.
-            if isinstance(matcher, str):
+            if isinstance(matcher, basestring):
                 matcher = TemplateChildMatcher(matcher)
             # Annotate the function.
             setattr(func, _RESTISH_CHILD, matcher)
@@ -44,7 +44,7 @@ def child(matcher=None, klass=None, canonical=False):
         def func(self, request, segments, *args, **kwargs):
             return klass(*args, **kwargs), segments
         
-        if isinstance(matcher, str):
+        if isinstance(matcher, basestring):
             matcher = TemplateChildMatcher(matcher, canonical)
         
         setattr(func, _RESTISH_CHILD, matcher)
@@ -90,29 +90,42 @@ class TemplateChildMatcher(object):
             return 1
         segments = self.pattern.split(self.SPLITTER)
         self.score = tuple(score(segment) for segment in segments)
-    
+
+    @staticmethod
+    def _re_safe(s):
+        """Make a safe expression to be used into a regexp"""
+        for c in r'\+*()[].^|':
+            s = s.replace(c, r'\%s' % c)
+        return s
+
     def _build_regex(self):
         """Build the regex from the pattern"""
         def re_segments(segments):
             for segment in segments:
-                if len(segment) >= 2 and (segment.find(self.MARKERS[0]) +
-                                          segment.find(self.MARKERS[1]) != -2):
-                    prefix, rest = segment.split(self.MARKERS[0], 1)
-                    var, suffix = rest.rsplit(self.MARKERS[1], 1)
+                if len(segment) >= 2 and segment.find("{") + \
+                    segment.find("}") != -2:
+                    prefix, rest = segment.split("{", 1)
+                    var, suffix = rest.rsplit("}", 1)
                     pos = var.find(":")
+                    # make them regexp safe
+                    prefix = self._re_safe(prefix)
+                    suffix = self._re_safe(suffix)
                     if ~pos:
-                        regex = '%s(?P<%s>%s)%s' % (prefix, var[:pos],
-                                                    var[pos+1:], suffix)
+                        regex = '%s(?P<%s>%s)%s' % (prefix,
+                                                    var[:pos],
+                                                    var[pos+1:],
+                                                    suffix)
                     else:
-                        regex = r'%s(?P<%s>[^%s]+)%s' % (prefix, var,
-                                                         self.SPLITTER, suffix)
+                        regex = r'%s(?P<%s>[^/]+)%s' % (prefix,
+                                                        var,
+                                                        suffix)
                     yield regex
                 else:
-                    yield segment
+                    yield self._re_safe(segment)
 
-        segments = self.pattern.split(self.SPLITTER)
+        segments = self.pattern.split('/')
         self._count = len(segments)
-        return self.SPLITTER.join(re_segments(segments))
+        return '/'.join(re_segments(segments))
 
     def _build_url(self):
         """Generate an URL from the matcher"""
@@ -326,7 +339,14 @@ class Resource(object):
         else:
             return None
         match_args, match_kwargs, segments = match
+        # A key cannot be in unicode. 
+        for key in match_kwargs.keys():
+            if isinstance(key, unicode):
+                value = match_kwargs[key]
+                del match_kwargs[key]
+                match_kwargs[key.encode("utf-8")] = value
         result = func(self, request, segments, *match_args, **match_kwargs)
+        
         if result is None:
             return None
         elif isinstance(result, tuple):

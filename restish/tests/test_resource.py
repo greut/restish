@@ -6,12 +6,12 @@ Test resource behaviour.
 
 import unittest
 
-from restish import app, http, resource, templating
+from restish import app, http, resource, templating, url
 from restish.tests.util import wsgi_out
 
 
 class TestResource(unittest.TestCase):
-
+    
     def test_no_method_handler(self):
         res = resource.Resource()
         environ = http.Request.blank('/').environ
@@ -152,6 +152,9 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('explicitly_named_child')
             def find_me_a_child(self, request, segments):
                 return self.__class__(self.segments + ['explicitly_named_child'])
+            @resource.child(u'éxpliçítly_nämed_child_with_unicøde')
+            def find_me_a_child_with_unicode(self, request, segments):
+                return self.__class__(self.segments + ['explicitly_named_child_with_unicode'])
             def __call__(self, request):
                 return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments))
         A = app.RestishApp(Resource())
@@ -159,7 +162,13 @@ class TestChildLookup(unittest.TestCase):
         print R
         assert R['status'].startswith('200')
         assert R['body'] == 'explicitly_named_child'
-
+        
+        print url._quote(u'éxpliçítly_nämed_child_with_unicøde'.encode("utf-8"))
+        R = wsgi_out(A, http.Request.blank(url._quote(u'éxpliçítly_nämed_child_with_unicøde'.encode("utf-8"))).environ)
+        print R
+        assert R['status'].startswith('200')
+        assert R['body'] == 'explicitly_named_child_with_unicode'
+    
     def test_segment_consumption(self):
         class Resource(resource.Resource):
             def __init__(self, segments=[]):
@@ -267,6 +276,9 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('a{b}c')
             def _8(self, request, segments, b):
                 return make_resource('a{b}c'), []
+            @resource.child('.+([^0-9])*|\S')
+            def _9(self, request, segments):
+                return make_resource('regexp-like'), []
             @resource.child(resource.any)
             def any(self, request, segments):
                 return make_resource('any'), []
@@ -279,6 +291,7 @@ class TestChildLookup(unittest.TestCase):
                 ('/a', 'a'),
                 ('/foo/b/c', '{a}/b/c'),
                 ('/abc', 'a{b}c'),
+                ('/.+([^0-9])*|\S', 'regexp-like'),
                 ('/foo', 'any'),
                 ]
         A = app.RestishApp(Resource())
@@ -324,6 +337,10 @@ class TestChildLookup(unittest.TestCase):
             @resource.child('feeds/{type:atom|rss|rss2}.xml')
             def feeds(self, request, segments, **kw):
                 return http.ok([], "feed %(type)s" % kw)
+
+            @resource.child(u'£+{user:[^£]+}')
+            def users(self, request, segments, **kw):
+                return http.ok([], u"user %(user)s" % kw)
         
         tests = [
                 ('/123', 'number 123'),
@@ -335,13 +352,14 @@ class TestChildLookup(unittest.TestCase):
                 ('/prefix-1', 'prefix 1'),
                 ('/1-suffix', 'suffix 1'),
                 ('/feeds/rss.xml', 'feed rss'),
-                ('/feeds/atom.xml', 'feed atom')
+                ('/feeds/atom.xml', 'feed atom'),
+                (url._quote(u'/£+yøan'.encode('utf-8')), u'user yøan'),
                 ]
 
         A = app.RestishApp(Resource())
         for path, expected in tests:
             R = wsgi_out(A, http.Request.blank(path).environ)
-            print path, expected, R
+            #print path, expected, R
             assert R['body'] == expected, "body: %s" % expected
     
     def test_subtree_match(self):
