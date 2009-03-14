@@ -252,7 +252,6 @@ class TemplateChildMatcher(object):
 
         segments = self.pattern.split('/')
         self._count = len(segments)
-        print '/'.join(re_segments(segments))
         return '/'.join(re_segments(segments))
 
     def _compile(self):
