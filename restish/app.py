@@ -16,7 +16,10 @@ class RestishApp(object):
             # Locate the resource.
             resource = self.locate_resource(request)
             # Call the resource to render the page.
-            response = self.get_response(request, resource)
+            if not isinstance(resource, http.Response):
+                response = self.get_response(request, resource)
+            else:
+                response = resource
         except error.HTTPError, e:
             response = e.make_response()
         # Send the response to the WSGI parent.
@@ -45,7 +48,7 @@ class RestishApp(object):
             # No result returned? 404.
             if result is None:
                 raise http.NotFoundError()
-            # Either aa (resource, remaining segments) tuple or an object to
+            # Either a (resource, remaining segments) tuple or an object to
             # forward the lookup to is acceptable.
             if isinstance(result, tuple):
                 resource, segments = result
@@ -60,15 +63,10 @@ class RestishApp(object):
         A resource is allowed to return another resource to be used in its
         place. This method handles the recursive calling.
         """
-        
-        # TODO: workaround for a bug I ignore.
-        if not isinstance(resource, http.Response):
-            while True:
-                response = resource(request)
-                if isinstance(response, http.Response):
-                    break
-                resource = response
-            return response
-        else:
-            return resource
+        while True:
+            response = resource(request)
+            if isinstance(response, http.Response):
+                break
+            resource = response
+        return response
 

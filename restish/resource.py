@@ -88,7 +88,14 @@ class Resource(object):
         else:
             return None
         match_args, match_kwargs, segments = match
+        # A key cannot be in unicode. 
+        for key in match_kwargs.keys():
+            if isinstance(key, unicode):
+                value = match_kwargs[key]
+                del match_kwargs[key]
+                match_kwargs[key.encode("utf-8")] = value
         result = func(self, request, segments, *match_args, **match_kwargs)
+        
         if result is None:
             return None
         elif isinstance(result, tuple):
@@ -181,7 +188,7 @@ def child(matcher=None):
             matcher = func.__name__
         # If the matcher is a string then create a TemplateChildMatcher in its
         # place.
-        if isinstance(matcher, str):
+        if isinstance(matcher, basestring):
             matcher = TemplateChildMatcher(matcher)
         # Annotate the function.
         setattr(func, _RESTISH_CHILD, matcher)
@@ -202,7 +209,7 @@ class TemplateChildMatcher(object):
         self._compile()
 
     def _calc_score(self):
-        """ Return the score for this element """
+        """Return the score for this element"""
         def score(segment):
             if len(segment) >= 2 and segment.find('{') + segment.find('}') != \
                 -2:
@@ -211,8 +218,13 @@ class TemplateChildMatcher(object):
         segments = self.pattern.split('/')
         self.score = tuple(score(segment) for segment in segments)
     
+    @staticmethod
+    def _re_safe(s):
+        """Make a safe expression to be used into a regexp"""
+        return s.replace("+", r"\+").replace("*", r"\*").replace("?", r"\?")
+    
     def _build_regex(self):
-        """ Build the regex from the pattern """
+        """Build the regex from the pattern"""
         def re_segments(segments):
             for segment in segments:
                 if len(segment) >= 2 and segment.find("{") + \
@@ -220,11 +232,19 @@ class TemplateChildMatcher(object):
                     prefix, rest = segment.split("{", 1)
                     var, suffix = rest.rsplit("}", 1)
                     pos = var.find(":")
+                    # make them regexp safe
+                    prefix = self._re_safe(prefix)
+                    suffix = self._re_safe(suffix)
+                    
                     if ~pos:
-                        regex = '%s(?P<%s>%s)%s' % (prefix, var[:pos], \
-                            var[pos+1:], suffix)
+                        regex = '%s(?P<%s>%s)%s' % (prefix,
+                                                    var[:pos],
+                                                    var[pos+1:],
+                                                    suffix)
                     else:
-                        regex = r'%s(?P<%s>[^/]+)%s' % (prefix, var, suffix)
+                        regex = r'%s(?P<%s>[^/]+)%s' % (prefix,
+                                                        var,
+                                                        suffix)
                     yield regex
                 else:
                     yield segment
@@ -234,7 +254,7 @@ class TemplateChildMatcher(object):
         return '/'.join(re_segments(segments))
 
     def _compile(self):
-        """ compile the regexp to match segments """
+        """Compile the regexp to match segments"""
         self._regex = re.compile('^' + self._build_regex() + '$')
 
     def __call__(self, request, segments):

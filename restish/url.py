@@ -25,7 +25,7 @@ def _encode(S):
     return S
 
 
-def _quote(S, safe):
+def _quote(S, safe="/"):
     """ urllib quote - see top of module for range of safe definitions """
     return urllib.quote(S, safe)
 
@@ -118,9 +118,9 @@ class URL(str):
                 hostname = None
             # Fix auth part if needed
             if parts.username or parts.password:
-                username = urllib.quote(parts.username.encode("utf-8"))
+                username = _quote(parts.username.encode("utf-8"))
                 if parts.password:
-                    password = urllib.quote(parts.password.encode("utf-8"))
+                    password = _quote(parts.password.encode("utf-8"))
                     username = username + ":" + password
                 hostname = username + "@" + hostname
             # add the port
@@ -128,8 +128,8 @@ class URL(str):
                 hostname += ":" + str(parts.port)
 
             # Deal with the other parts
-            path = urllib.quote(parts.path.encode("utf-8"), safe="/:~")
-            query = urllib.quote(parts.query.encode("utf-8"), safe="=&")
+            path = _quote(parts.path.encode("utf-8"), safe="/:~")
+            query = _quote(parts.query.encode("utf-8"), safe="=&")
             # And rebuild it
             url = urlparse.urlunsplit([parts.scheme,
                                        hostname,
