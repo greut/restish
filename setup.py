@@ -45,5 +45,5 @@ or database engine.
       [paste.paster_create_template]
       restish = restish.pastertemplate:RestishTemplate
       """,
-      test_suite="nose.collector"
+      test_suite="restish.tests"
       )

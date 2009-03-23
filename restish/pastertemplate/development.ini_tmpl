@@ -4,10 +4,19 @@
 APP_ID = ${package}@localhost
 ; Email settings.
 SMTP_SERVER = localhost
+CACHE_DIR = %(here)s/cache
 
-[app:main]
-use = egg:${project}
-cache_dir = %(here)s/cache
+[composite:main]
+use = egg:Paste#cascade
+app1 = public
+app2 = ${package}
+filter-with = evalerror
+
+[app:${package}]
+use = config:${package}.ini#${package}
+
+[app:public]
+use = egg:Paste#static
 document_root = %(here)s/${package}/public
 
 ; Is not working during setup-app

@@ -23,7 +23,8 @@ setup(name='${project}',
           'WebError',
       ],
       test_suite='nose.collector',
-      entry_points="""# -*- Entry points: -*-
+      entry_points="""
+      # -*- Entry points: -*-
 [paste.app_factory]
 main = ${package}.wsgiapp:make_app
 
@@ -32,5 +33,5 @@ main = paste.script.appinstall:Installer
 
 [nose.plugins]
 restish = restish.contrib.noseutils:Plugin
-""",
+      """,
       )
