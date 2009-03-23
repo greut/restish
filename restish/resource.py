@@ -378,14 +378,14 @@ class Resource(object):
             # the best match if not a wildcard then we know what content-type
             # should be.
             if isinstance(response, http.Response) and \
-                    not response.headers.get('content-type'):
+                    not response.content_type:
                 accept = str(request.accept)
                 if not accept and len(match['accept']) == 1:
                     best_match = match['accept'][0]
                 else:
                     best_match = mimeparse.best_match(match['accept'], accept)
                 if '*' not in best_match:
-                    response.headers['content-type'] = best_match
+                    response.content_type = best_match
             return response
         # No match, send 406
         return http.not_acceptable([('Content-Type', 'text/plain')], \
@@ -433,8 +433,7 @@ def _filter_dispatchers_on_content_type(dispatchers, request):
     for d in dispatchers:
         supported.extend(d[1]['content_type'])
     # Find the best type.
-    best_match = mimeparse.best_match(supported, \
-                                      str(request.headers['content-type']))
+    best_match = mimeparse.best_match(supported, request.content_type)
     # Return the matching dispatchers
     return [d for d in dispatchers if best_match in d[1]['content_type']]
 
