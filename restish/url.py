@@ -128,7 +128,7 @@ class URL(str):
                 hostname += ":" + str(parts.port)
 
             # Deal with the other parts
-            path = _quote(parts.path.encode("utf-8"), safe="/:~")
+            path = _quote(parts.path.encode("utf-8"), safe="/:~+")
             query = _quote(parts.query.encode("utf-8"), safe="=&")
             # And rebuild it
             url = urlparse.urlunsplit([parts.scheme,

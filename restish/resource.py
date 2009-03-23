@@ -147,7 +147,7 @@ def _best_dispatcher(dispatchers, request):
     """
     # Use content negotation to filter the dispatchers to an ordered list of
     # only those that match.
-    if request.headers.get('content-type'):
+    if request.content_type is not "":
         dispatchers = _filter_dispatchers_on_content_type(dispatchers, request)
     if request.headers.get('accept'):
         dispatchers = _filter_dispatchers_on_accept(dispatchers, request)
@@ -342,9 +342,5 @@ def _normalise_mimetype(mimetype):
     if real is not None:
         return real
     # Try extra extension mapping.
-    real = SHORT_CONTENT_TYPE_EXTRA.get(mimetype)
-    if real is not None:
-        return real
-    # Oh well.
-    return mimetype
+    return SHORT_CONTENT_TYPE_EXTRA.get(mimetype, mimetype)
 
