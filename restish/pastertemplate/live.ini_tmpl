@@ -8,9 +8,11 @@ ERROR_EMAIL_FROM = %(APP_ID)s
 ERROR_EMAIL_TO = %(APP_ID)s
 
 [app:main]
-use = egg:${project}
-cache_dir = %(here)s/cache
+use = ${package}
 filter-with = error_catcher
+
+[app:${package}]
+use = config:${package}.ini#${package}
 
 [server:main]
 use = egg:Paste#http
