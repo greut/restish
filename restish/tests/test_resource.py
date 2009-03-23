@@ -661,8 +661,9 @@ class TestAcceptContentNegotiation(unittest.TestCase):
             def html(self, request):
                 return http.ok([('Content-Type', 'text/plain')], 'Hello!')
         res = Resource()
-        environ = http.Request.blank('/', headers={'Accept': 'text/plain'}).environ
-        response = res(http.Request(environ))
+        req = http.Request.blank('/', headers={'Accept': 'text/plain'})
+        req.accept = 'text/plain'
+        response = res(req)
         self.assertEquals(response.status,"200 OK")
         self.assertEquals(response.headers['Content-Type'],'text/plain')
         self.assertEquals(response.app_iter,['Hello!'])
@@ -811,11 +812,13 @@ class TestContentTypeContentNegotiation(unittest.TestCase):
         assert response.body == 'json_in_json_out'
 
     def _request(self, content_type, accept=None):
-        headers = {'Content-Type': content_type}
+        req = http.Request.blank('/')
+        req.content_type = content_type
+        req.method = 'POST'
         if accept:
-            headers['Accept'] = accept
-        return http.Request.blank('/', environ={'REQUEST_METHOD': 'POST'},
-                                  headers=headers)
+            req.accept = accept
+
+        return req
 
 
 class TestAcceptLists(unittest.TestCase):

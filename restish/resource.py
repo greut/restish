@@ -417,7 +417,7 @@ def _best_dispatcher(dispatchers, request):
     """
     # Use content negotation to filter the dispatchers to an ordered list of
     # only those that match.
-    if request.headers.get('content-type'):
+    if request.content_type is not "":
         dispatchers = _filter_dispatchers_on_content_type(dispatchers, request)
     if request.headers.get('accept'):
         dispatchers = _filter_dispatchers_on_accept(dispatchers, request)
