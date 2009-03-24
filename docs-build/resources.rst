@@ -387,6 +387,41 @@ possible to share a common space between different kind of resources. There
 is no conflict between a ``year`` composed of 4 numbers and the string
 ``feeds`` in the example above.
 
+Straightforward resource chaining
+---------------------------------
+
+The very same example as the previous one, using a declarative syntax.
+
+.. code-block:: python
+
+    class Root(resource.Resource):
+
+        blog_month_entries = resource.child('{year:[0-9]{4}}/{month:[01][0-9]}',
+                                            BlogList)
+        blog = resource.child('{year:[0-9]{4}}/{month:[01][0-9]}/{entryid:[0-9]+}',
+                              BlogPost)
+        feeds = resource.child('feeds/{type:atom|rss|rss2}.xml', BlogFeed)
+        archives = resource.child(BlogArchives)
+
+The advantage of it is that you can build dynamically the URL of a resource using ``resource.url_for``. A case insensitive string representing the name of the resource is also accepted.
+
+.. code-block:: python
+    
+    >>> resource.url_for(Root)
+    '/'
+    >>> resource.url_for(BlogArchives)
+    '/archives'
+    >>> resource.url_for('BlogArchives')
+    '/archives'
+    >>> resource.url_for(BlogFeed, type='atom')
+    '/feeds/atom.xml'
+    >>> resource.url_for(BlogPost, year='2009', month='03', entryid='100')
+    '/2009/03/100'
+    >>> resource.url_for('bloglist', year='2009', month='03')
+    '/2009/03'
+
+You can use it directly from your templates once this method is accessible from them. The way to do it varies from one templating system to the other.
+
 Custom Matchers
 ---------------
 
@@ -396,9 +431,9 @@ let's process the following search url ``/search/python?u=foo``
 .. code-block:: python
 
     def mymatcher(request, segments):
-        if len(segments) >2 and segments[0] == 'search':
+        if len(segments) > 2 and segments[0] == 'search':
             category = segments[1]
-            search_string = request.GET.get('u',None)
+            search_string = request.GET.get('u', None)
         return {'category': category, 'search_string': search_string}, ()
   
     class Root(resource.Resource):
