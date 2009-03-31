@@ -403,6 +403,9 @@ The very same example as the previous one, using a declarative syntax.
         feeds = resource.child('feeds/{type:atom|rss|rss2}.xml', BlogFeed)
         archives = resource.child(BlogArchives)
 
+URL generation
+--------------
+
 The advantage of it is that you can build dynamically the URL of a resource using ``resource.url_for``. A case insensitive string representing the name of the resource is also accepted.
 
 .. code-block:: python
@@ -417,8 +420,17 @@ The advantage of it is that you can build dynamically the URL of a resource usin
     '/feeds/atom.xml'
     >>> resource.url_for(BlogPost, year='2009', month='03', entryid='100')
     '/2009/03/100'
-    >>> resource.url_for('bloglist', year='2009', month='03')
+    >>> resource.url_for('bloglist', {'year': '2009', 'month': '03'})
     '/2009/03'
+    >>> class Post(object):
+    ...     def __init__(self, year, month, entryid):
+    ...         self.year = year
+    ...         self.month = month
+    ...         self.entryid = entryid
+    ...
+    >>> post = Post(2009, "03", 100) 
+    >>> resource.url_for('BlogPost', post)
+    '/2009/03/100'
 
 You can use it directly from your templates once this method is accessible from them. The way to do it varies from one templating system to the other.
 

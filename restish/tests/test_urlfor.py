@@ -2,7 +2,7 @@
 
 import unittest
  
-from restish import app, http, resource, templating
+from restish import app, http, resource, templating, url
 from restish.tests.util import wsgi_out
 
 
@@ -54,7 +54,6 @@ class TestUrlFor(unittest.TestCase):
         for path, body in tests:
             environ = http.Request.blank(path).environ
             response = wsgi_out(A, environ)
-            #print path, response["body"]
             assert response["status"].startswith("200")
             assert response["body"] == body
         
@@ -187,6 +186,7 @@ class TestUrlFor(unittest.TestCase):
 
         for (klass, args), url in tests:
             assert resource.url_for(klass, **args) == url, url
+            assert resource.url_for(klass, args) == url, url
     
     def test_canonical(self):
         class Book(resource.Resource):
@@ -213,42 +213,77 @@ class TestUrlFor(unittest.TestCase):
         for path, body in tests:
             environ = http.Request.blank(path).environ
             response = wsgi_out(A, environ)
-            #print path, response["body"]
             assert response["status"].startswith("200")
             assert response["body"] == body
         
         assert resource.url_for(Book, title="4") == "/book/4"
         assert resource.url_for("book", title="5") == "/book/5"
-        # TODO: pass those
+        # TODO: requires extra flying ponies!
         #assert resource.url_for("book", category="animal", title="6") == "/category/animal/6"
         #assert resource.url_for("book", year="2009", month="03", day="09", title="7") == "/2009/03/09/7"
     
+    def test_unicode(self):
+        class Moo(resource.Resource):
+            def __init__(self, arg):
+                self.arg = arg
     
-    # TODO: One day, maybe in a world of flying unicode ponies
-    #def test_unicode(self):
-    #    class Moo(resource.Resource):
-    #        def __init__(self, arg):
-    #            self.arg = arg
-    #
-    #        def __call__(self, segments):
-    #            return http.ok([], self.arg)
-    #
-    #    class Root(resource.Resource):
-    #        moo = resource.child(u"£-{arg}", Moo)
-    #    
-    #    tests = [(u"/£-a", u"a"),
-    #             (u"/£-ä", u"ä")
-    #            ]
-    #
-    #    A = app.RestishApp(Root())
-    #    for path, body in tests:
-    #        environ = http.Request.blank(path).environ
-    #        response = wsgi_out(A, environ)
-    #        print path, response["body"]
-    #        assert response["status"].startswith("200")
-    #        assert response["body"] == body
-    #
-    #    assert Moo._url_for(args=u"ä") == u"/£-ä"
+            def __call__(self, segments):
+                return http.ok([("Content-type", "text/plain; charset=utf-8")],
+                                self.arg)
+    
+        class Root(resource.Resource):
+            moo = resource.child(u"£-{arg}", Moo)
+        
+        tests = [(u"£-a", u"a"),
+                 (u"£-ä", u"ä")
+                ]
+    
+        A = app.RestishApp(Root())
+        for path, body in tests:
+            req = http.Request.blank(url.join_path([path]))
+            response = wsgi_out(A, req.environ)
+            assert response["status"].startswith("200")
+            assert response["body"] == body
+             
+            assert resource.url_for("moo", arg=body) == url.join_path([path])
+
+    def test_urlfor_using_object(self):
+        class Data(object):
+            def __init__(self, a, b, c):
+                self.a = a
+                self.b = b
+                self.c = c
+
+            def __str__(self):
+                return (u"%s %s %s " % (self.a, self.b, self.c)).encode("utf-8")
+
+        class Abc(resource.Resource):
+            def __init__(self, a, b, c):
+                self.data = Data(a, b, c)
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-type", "text/plain; charset=utf-8")],
+                               str(self.data))
+
+        class Root(resource.Resource):
+            data = resource.child("{a}/{b}/{c}", Abc)
+        
+        tests = [(("a", "b", "c"), "/a/b/c"),
+                 ((1, 2, 3), "/1/2/3"),
+                 ((u"£", u"$", u"€"), url.join_path([u"£", u"$", u"€"]))
+                ]
+
+        A = app.RestishApp(Root())
+        for data, path in tests:
+            obj = Data(*data)
+            # request
+            req = http.Request.blank(path)
+            response = wsgi_out(A, req.environ)
+            assert response["status"].startswith("200")
+            assert response["body"] == str(obj)
+            # reverse url
+            assert resource.url_for("abc", obj) == path
 
 
 if __name__ == "__main__":

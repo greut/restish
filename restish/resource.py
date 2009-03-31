@@ -52,17 +52,22 @@ def child(matcher=None, klass=None, canonical=False):
         return func
 
 
-def url_for(cls, **kwargs):
+def url_for(cls, *args, **kwargs):
     """
     Contruct an URL going up from the given resource class to the root.
+
+    url_for(Klass, arg1="val1", arg2="val2")
+    url_for(Klass, {"arg1":"val1", "arg2": "val2"})
+    url_for(Klass, obj)
     """
     if isinstance(cls, basestring):
         classname = cls.lower()
         cls = Resource._resources.get(classname, None)
     
-    # Root resource isn't in.
+    # Some resource aren't in, like the root of the tree.
+    # they will get "/"
     if cls is not None:
-        return cls._url_for(**kwargs)
+        return cls._url_for(*args, **kwargs)
     else:
         return Resource._url_for()
 
@@ -150,9 +155,34 @@ class TemplateChildMatcher(object):
         """Compile the regexp to match segments"""
         self._regex = re.compile('^' + self._build_regex() + '$')
     
-    def _url_for(self, **kwargs):
-        """Compile the URL with the given arguments."""
-        return [segment % kwargs for segment in self._build_url()]
+    def _url_for(self, obj=None, **kwargs):
+        """Compile the URL with the given arguments.
+        
+        _url_for({arg: val, ...})
+        _url_for(obj)
+        _url_for(arg=val, ...)
+        """
+        template_url = self._build_url()
+        if type(obj) is dict:
+            kwargs = dict(kwargs, **obj)
+            obj = None
+        
+        if obj is not None:
+            group = re.compile(r"%\(([^\)]+)\)s")
+            segments = []
+            for segment in template_url:
+                keys = group.findall(segment)
+                if keys:
+                    for key in keys:
+                        if hasattr(obj, key):
+                            segments.append(segment % {key: getattr(obj, key)})
+                        else:
+                            raise KeyError(key, "url_for: key is missing")
+                else:
+                    segments.append(segment)
+            return segments
+        else:
+            return [segment % kwargs for segment in template_url]
 
     def __call__(self, request, segments):
         match_segments, remaining_segments = \
@@ -392,14 +422,14 @@ class Resource(object):
                                    '406 Not Acceptable')
     
     @classmethod
-    def _url_for(cls, **kwargs):
+    def _url_for(cls, *args, **kwargs):
         """
         URL of this resource built using the given arguments
         """
         parents = []
                 
         while hasattr(cls, '_parent'):
-            segments = cls._parent.child_matchers.get(cls, None)._url_for(**kwargs)
+            segments = cls._parent.child_matchers.get(cls, None)._url_for(*args, **kwargs)
             segments.reverse()
             parents += segments
             cls = cls._parent
