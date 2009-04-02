@@ -408,7 +408,7 @@ URL generation
 
 The advantage of it is that you can build dynamically the URL of a resource using ``resource.url_for``. A case insensitive string representing the name of the resource is also accepted.
 
-.. code-block:: python
+.. code-block:: pycon
     
     >>> resource.url_for(Root)
     '/'

@@ -18,6 +18,7 @@ SHORT_CONTENT_TYPE_EXTRA = {
         'json': 'application/json',
         }
 
+PYTHON_STRING_VARS = re.compile(r"%\(([^\)]+)\)s")
 
 def child(matcher=None, klass=None, canonical=False):
     if klass is None and not isinstance(matcher, _metaResource):
@@ -168,10 +169,9 @@ class TemplateChildMatcher(object):
             obj = None
         
         if obj is not None:
-            group = re.compile(r"%\(([^\)]+)\)s")
             segments = []
             for segment in template_url:
-                keys = group.findall(segment)
+                keys = PYTHON_STRING_VARS.findall(segment)
                 if keys:
                     for key in keys:
                         if hasattr(obj, key):
