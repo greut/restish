@@ -420,6 +420,16 @@ class TestChildLookup(unittest.TestCase):
         R = wsgi_out(A, http.Request.blank('/%C2%A3').environ)
         assert R['body'] == '£'
 
+    def test_child_is_a_response(self):
+        class Resource(resource.Resource):
+            @resource.child()
+            def foo(self, request, segments):
+                return http.ok([], 'foobar')
+
+        A = app.RestishApp(Resource())
+        R = wsgi_out(A, http.Request.blank('/foo').environ)
+        assert R['body'] == 'foobar'
+
     def _test_custom_match(self):
         self.fail()
 
