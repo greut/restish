@@ -73,6 +73,40 @@ def url_for(cls, *args, **kwargs):
         return Resource._url_for()
 
 
+def redirect(fro, to=None):
+    if not isinstance(fro, _metaResource) and not isinstance(to, _metaResource):
+        def decorator(func):
+            # you cannot alter a variable that sits outside the scope
+            # so they are renamed
+            if to is None:
+                dest = fro
+                orig = func.__name__
+            else:
+                dest = to
+                orig = fro
+
+            if type(dest) not in (list, tuple):
+                dest = dest,
+            
+            # ignore original func
+            new_func = lambda self, request, segments: http.found(request.application_url.child(*dest))
+            setattr(new_func, _RESTISH_CHILD, TemplateChildMatcher(orig))
+            return new_func
+        return decorator
+    else:
+        if to is None:
+            to = fro
+            fro = None
+        else:
+            fro = TemplateChildMatcher(fro)
+        
+        def func(self, request, segments, **kwargs):
+            return http.found(request.application_url + to._url_for(kwargs))
+
+        setattr(func, _RESTISH_CHILD, fro)
+        return func
+
+
 class TemplateChildMatcher(object):
     """
     A @child matcher that parses a template in the form /fixed/{dynamic}/fixed,

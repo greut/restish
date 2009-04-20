@@ -899,6 +899,116 @@ class TestShortAccepts(unittest.TestCase):
         assert response.headers['Content-Type'] == 'unknown'
 
 
+class TestRedirectTo(unittest.TestCase):
+
+    def test_full(self):
+        class Resource(resource.Resource):
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "resource")
+
+            @resource.redirect("foo", "bar")
+            def foo(self, request):
+                """Redirect to bar"""
+            
+            @resource.redirect("bar")
+            def foo2(self, request):
+                """Redirect to bar"""
+
+            @resource.redirect("spam/or/eggs", ("spam", "and", "eggs"))
+            def spam_or_eggs(self, request):
+                """Redirect to spam *and* eggs"""
+
+            @resource.child()
+            def bar(self, request, segments):
+                return http.ok([("Content-Type", "text/plain")],
+                               "bar")
+
+            @resource.child("spam/and/eggs")
+            def spam_and_eggs(self, request, segments):
+                return http.ok([("Content-Type", "text/plain")],
+                               "spam")
+
+
+        A = app.RestishApp(Resource())
+
+        R = wsgi_out(A, http.Request.blank('/').environ)
+        assert R['status'].startswith('200'), R.status
+        assert R['body'] == 'resource'
+        
+        R = wsgi_out(A, http.Request.blank('/bar').environ)
+        assert R['status'].startswith('200'), R.status
+        assert R['body'] == 'bar'
+        
+        R = wsgi_out(A, http.Request.blank('/foo').environ)
+        assert R['status'].startswith('302')
+        
+        R = wsgi_out(A, http.Request.blank('/foo2').environ)
+        assert R['status'].startswith('302')
+        
+        R = wsgi_out(A, http.Request.blank('/spam/and/eggs').environ)
+        assert R['status'].startswith('200'), R.status
+        assert R['body'] == 'spam'
+        
+        R = wsgi_out(A, http.Request.blank('/spam/or/eggs').environ)
+        assert R['status'].startswith('302'), R.status
+
+    def test_declarative(self):
+        class Bar2(resource.Resource):
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "bar")
+
+        class Spam2(resource.Resource):
+            def __init__(self, id):
+                self.id = id
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               self.id)
+
+        class Resource2(resource.Resource):
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "resource")
+
+            foo = resource.redirect(Bar2)
+            foo2 = resource.redirect("foo2", Bar2)
+            bar = resource.child(Bar2)
+
+            spum = resource.redirect("spum{id}", Spam2)
+            spam = resource.child("spam{id}", Spam2)
+
+        A = app.RestishApp(Resource2())
+
+        R = wsgi_out(A, http.Request.blank('/').environ)
+        assert R['status'].startswith('200')
+        assert R['body'] == 'resource'
+
+        R = wsgi_out(A, http.Request.blank('/bar').environ)
+        assert R['status'].startswith('200')
+        assert R['body'] == 'bar'
+        
+        R = wsgi_out(A, http.Request.blank('/foo').environ)
+        assert R['status'].startswith('302')
+        
+        R = wsgi_out(A, http.Request.blank('/foo2').environ)
+        assert R['status'].startswith('302')
+        
+        R = wsgi_out(A, http.Request.blank('/spam42').environ)
+        assert R['status'].startswith('200')
+        assert R['body'] == '42'
+        
+        R = wsgi_out(A, http.Request.blank('/spum42').environ)
+        assert R['status'].startswith('302')
+        # location header
+        assert R['headers'][0][1].endswith('/spam42')
+
+
 if __name__ == '__main__':
     unittest.main()
 
