@@ -426,7 +426,17 @@ class TestChildLookup(unittest.TestCase):
             def foo(self, request, segments):
                 return http.ok([], 'foobar')
 
+        # Check a leaf child (no more segments).
         A = app.RestishApp(Resource())
+        R = wsgi_out(A, http.Request.blank('/foo').environ)
+        assert R['body'] == 'foobar'
+        # Check a branch child (additional segments)
+        A = app.RestishApp(Resource())
+        R = wsgi_out(A, http.Request.blank('/foo/bar').environ)
+        assert R['body'] == 'foobar'
+
+    def test_root_is_a_response(self):
+        A = app.RestishApp(http.ok([], 'foobar'))
         R = wsgi_out(A, http.Request.blank('/foo').environ)
         assert R['body'] == 'foobar'
 
