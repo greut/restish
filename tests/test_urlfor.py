@@ -3,7 +3,7 @@
 import unittest
  
 from restish import app, http, resource, templating, url
-from restish.tests.util import wsgi_out
+from restish.util import wsgi_out
 
 
 class TestUrlFor(unittest.TestCase):

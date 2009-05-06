@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from restish import app, http, resource
-from restish.tests.util import wsgi_out
+from restish.util import wsgi_out
 
 
 class Resource(resource.Resource):

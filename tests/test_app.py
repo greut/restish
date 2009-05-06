@@ -1,7 +1,7 @@
 import unittest
 
 from restish import app, http, resource, url
-from restish.tests.util import wsgi_out
+from restish.util import wsgi_out
 
 
 class Resource(resource.Resource):

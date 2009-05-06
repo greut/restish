@@ -24,3 +24,11 @@ class RequestBoundCallable(object):
     def __getitem__(self, name):
         return self.callable[name]
 
+def wsgi_out(app, environ):
+    """Simple tool for testing purposes"""
+    out = {}
+    def start_response(status, headers, exc_info=None):
+        out['status'] = status
+        out['headers'] = headers
+    out['body'] = ''.join(iter(app(environ, start_response)))
+    return out
