@@ -269,28 +269,33 @@ class MethodDecorator(object):
 
 
 class ALL(MethodDecorator):
-    """ every kind of http methods """
+    """Every kind of http methods"""
     method = '*'
 
+
 class DELETE(MethodDecorator):
-    """ http DELETE method """
+    """http DELETE method"""
     method = 'DELETE'
 
 
 class GET(MethodDecorator):
-    """ http GET method """
+    """http GET method"""
     method = 'GET'
 
 
 class POST(MethodDecorator):
-    """ http POST method """
+    """http POST method"""
     method = 'POST'
 
 
 class PUT(MethodDecorator):
-    """ http PUT method """
+    """http PUT method"""
     method = 'PUT'
 
+
+class HEAD(MethodDecorator):
+    """http HEAD method"""
+    method = 'HEAD'
 
 def _normalise_mimetype(mimetype):
     """
@@ -424,12 +429,17 @@ class Resource(object):
         dispatchers = self.request_dispatchers.get(request.method)
         # No normal dispatchers for method found,
         if dispatchers is None:
-            # Looking for a magic dispatcher
-            dispatchers = self.request_dispatchers.get(ALL.method)
-            # No magic dispatchers found either,
-            # send 405 with list of allowed methods.
+            if request.method == HEAD.method:
+                # HEAD is (almost) GET
+                dispatchers = self.request_dispatchers.get(GET.method)
+                
             if dispatchers is None:
-                return http.method_not_allowed(', '.join(self.request_dispatchers))
+                # Looking for a magic dispatcher
+                dispatchers = self.request_dispatchers.get(ALL.method)
+                # No magic dispatchers found either,
+                # send 405 with list of allowed methods.
+                if dispatchers is None:
+                    return http.method_not_allowed(', '.join(self.request_dispatchers))
         # Look up the best dispatcher
         dispatcher = _best_dispatcher(dispatchers, request)
         if dispatcher is not None:
@@ -451,6 +461,9 @@ class Resource(object):
                     best_match = mimeparse.best_match(match['accept'], accept)
                 if '*' not in best_match:
                     response.content_type = best_match
+            if request.method is HEAD.method:
+                # Emptying a GET that has been called as a HEAD
+                response.body = ''
             return response
         # No match, send 406
         return http.not_acceptable([('Content-Type', 'text/plain')], \

@@ -20,6 +20,9 @@ class TestResource(unittest.TestCase):
 
     def test_methods(self):
         class Resource(resource.Resource):
+            @resource.HEAD()
+            def HEAD(self, request):
+                return http.ok([], '')
             @resource.GET()
             def GET(self, request):
                 return http.ok([], 'GET')
@@ -32,13 +35,16 @@ class TestResource(unittest.TestCase):
             @resource.DELETE()
             def DELETE(self, request):
                 return http.ok([], 'DELETE')
-        for method in ['GET', 'POST', 'PUT', 'DELETE']:
+        for method in ['GET', 'POST', 'PUT', 'DELETE', 'HEAD']:
             environ = http.Request.blank('/',
                     environ={'REQUEST_METHOD': method},
                     headers={'Accept': 'text/html'}).environ
             response = Resource()(http.Request(environ))
             assert response.status == "200 OK"
-            assert response.body == method
+            if method is not 'HEAD':
+                assert response.body == method
+            else:
+                assert response.body == ''
 
     def test_all_methods(self):
         class Resource(resource.Resource):
@@ -63,9 +69,23 @@ class TestResource(unittest.TestCase):
             environ = http.Request.blank('/',
                     environ={"REQUEST_METHOD": method}).environ
             response = Resource()(http.Request(environ))
-            #print response.status, response.body
-            assert response.status == "200 OK", response.status
-            assert response.body == body, body
+            assert response.status == "200 OK"
+            assert response.body == body
+    
+    def test_head_method(self):
+        class Resource(resource.Resource):
+            @resource.GET()
+            def get(self, request):
+                return http.ok([], request.method)
+        
+        environ = http.Request.blank('/').environ
+        response = Resource()(http.Request(environ))
+        assert response.body == "GET"
+
+        environ = http.Request.blank('/', environ={"REQUEST_METHOD": "HEAD"}) \
+                              .environ
+        response = Resource()(http.Request(environ))
+        assert response.body == ""
 
 
 class TestChildLookup(unittest.TestCase):
