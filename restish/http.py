@@ -106,7 +106,7 @@ class Response(webob.Response):
 
 # Successful 2xx
 
-def ok(headers, body):
+def ok(headers, body=''):
     """
     200 OK
 

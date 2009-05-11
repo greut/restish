@@ -22,7 +22,7 @@ class TestResource(unittest.TestCase):
         class Resource(resource.Resource):
             @resource.HEAD()
             def HEAD(self, request):
-                return http.ok([], '')
+                return http.ok([])
             @resource.GET()
             def GET(self, request):
                 return http.ok([], 'GET')
