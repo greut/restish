@@ -297,6 +297,15 @@ class HEAD(MethodDecorator):
     """http HEAD method"""
     method = 'HEAD'
 
+class OPTIONS(MethodDecorator):
+    """http OPTIONS method"""
+    method = 'OPTIONS'
+
+
+class TRACE(MethodDecorator):
+    """http TRACE method"""
+    method = 'TRACE'
+
 def _normalise_mimetype(mimetype):
     """
     Expand any shortcut mimetype names into a full mimetype
