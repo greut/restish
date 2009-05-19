@@ -37,14 +37,12 @@ class TestStreaming(unittest.TestCase):
 
     def test_file(self):
         def file_closing_iter(f):
-            try:
-                while True:
-                    data = f.read(100)
-                    if not data:
-                        return
-                    yield data
-            finally:
-                f.close()
+            while True:
+                data = f.read(100)
+                if not data:
+                    f.close()
+                    return
+                yield data
         (fd, filename) = tempfile.mkstemp()
         f = os.fdopen(fd, 'w')
         f.write('file')
