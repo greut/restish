@@ -21,7 +21,7 @@ SHORT_CONTENT_TYPE_EXTRA = {
 
 PYTHON_STRING_VARS = re.compile(r"%\(([^\)]+)\)s")
 
-def child(matcher=None, klass=None, canonical=False):
+def child(matcher=None, klass=None, canonical=False, with_parent=False):
     if klass is None and not isinstance(matcher, _metaResource):
         """ Child decorator used for finding child resources """
         def decorator(func, matcher=matcher):
@@ -44,6 +44,8 @@ def child(matcher=None, klass=None, canonical=False):
             matcher = None
         
         def func(self, request, segments, *args, **kwargs):
+            if with_parent:
+                kwargs["_parent"] = self
             return klass(*args, **kwargs), segments
         
         if isinstance(matcher, basestring):

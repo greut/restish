@@ -992,15 +992,19 @@ class TestRedirectTo(unittest.TestCase):
                                "bar")
 
         class Spam2(resource.Resource):
-            def __init__(self, id):
+            def __init__(self, id, _parent):
                 self.id = id
+                self.parent = _parent
 
             @resource.GET()
             def get(self, request):
                 return http.ok([("Content-Type", "text/plain")],
-                               self.id)
+                               "%s %s" % (self.parent.foo, self.id))
 
         class Resource2(resource.Resource):
+            def __init__(self, foo):
+                self.foo = foo
+
             @resource.GET()
             def get(self, request):
                 return http.ok([("Content-Type", "text/plain")],
@@ -1011,9 +1015,9 @@ class TestRedirectTo(unittest.TestCase):
             bar = resource.child(Bar2)
 
             spum = resource.redirect("spum{id}", Spam2)
-            spam = resource.child("spam{id}", Spam2)
+            spam = resource.child("spam{id}", Spam2, with_parent=True)
 
-        A = app.RestishApp(Resource2())
+        A = app.RestishApp(Resource2("who's your daddy"))
 
         R = wsgi_out(A, http.Request.blank('/').environ)
         assert R['status'].startswith('200')
@@ -1031,7 +1035,7 @@ class TestRedirectTo(unittest.TestCase):
         
         R = wsgi_out(A, http.Request.blank('/spam42').environ)
         assert R['status'].startswith('200')
-        assert R['body'] == '42'
+        assert R['body'] == 'who\'s your daddy 42'
         
         R = wsgi_out(A, http.Request.blank('/spum42').environ)
         assert R['status'].startswith('302')
