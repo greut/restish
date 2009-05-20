@@ -27,8 +27,12 @@ class RequestBoundCallable(object):
 def wsgi_out(app, environ):
     """Simple tool for testing purposes"""
     out = {}
-    def start_response(status, headers, exc_info=None):
+    def start_response(status, headers):
         out['status'] = status
         out['headers'] = headers
-    out['body'] = ''.join(iter(app(environ, start_response)))
+    result = app(environ, start_response)
+    out['body'] = ''.join(iter(result))
+    if hasattr(result, 'close'):
+        result.close()
     return out
+

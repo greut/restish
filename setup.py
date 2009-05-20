@@ -1,3 +1,6 @@
+from ez_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, find_packages
 import sys, os
 
@@ -46,5 +49,6 @@ or database engine.
       [paste.paster_create_template]
       restish = restish.pastertemplate:RestishTemplate
       """,
-      test_suite="tests"
+      test_suite='tests',
+      tests_require=['Jinja2', 'mako', 'Genshi', 'Tempita'],
       )
