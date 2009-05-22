@@ -135,7 +135,7 @@ def render_response(request, page, template, args={},
     :arg headers:
         Optional extra HTTP headers for the output, default to []
     """
-    headers += [('Content-Type', '%s; charset=%s' % (type, encoding))]
+    headers.append(('Content-Type', '%s; charset=%s' % (type, encoding)))
     return http.ok(headers,
                    render_page(request, page, template, args,
                                encoding=encoding))
