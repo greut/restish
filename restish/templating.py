@@ -113,7 +113,8 @@ def render_page(request, page, template, args={}, encoding='utf-8'):
 
 
 def render_response(request, page, template, args={},
-                    type='text/html', encoding='utf-8'):
+                    type='text/html', encoding='utf-8',
+                    headers=[]):
     """
     Render a page, using the template and args, and return a '200 OK'
     response.  The response's Content-Type header will be constructed from
@@ -131,8 +132,11 @@ def render_response(request, page, template, args={},
         Optional mime type of content, defaults to 'text/html'
     :arg encoding:
         Optional encoding of output, default to 'utf-8'.
+    :arg headers:
+        Optional extra HTTP headers for the output, default to []
     """
-    return http.ok([('Content-Type', "%s; charset=%s"%(type, encoding))],
+    headers += [('Content-Type', '%s; charset=%s' % (type, encoding))]
+    return http.ok(headers,
                    render_page(request, page, template, args,
                                encoding=encoding))
 
@@ -162,8 +166,12 @@ def page(template, type='text/html', encoding='utf-8'):
         def decorated(page, request, *a, **k):
             args = func(page, request, *a, **k)
             if not isinstance(args, http.Response):
+                headers = []
+                if not isinstance(args, dict) and len(args) == 2:
+                    headers, args = args[0], args[1]
                 return render_response(request, page, template, args,
-                                       type=type, encoding=encoding)
+                                       type=type, encoding=encoding,
+                                       headers=headers)
             else:
                 return args
         decorated.__name__ = func.func_name
