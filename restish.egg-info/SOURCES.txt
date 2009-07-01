@@ -107,6 +107,7 @@ restish/resource.py
 restish/templating.py
 restish/url.py
 restish/util.py
+restish.egg-info/.SOURCES.txt.swp
 restish.egg-info/PKG-INFO
 restish.egg-info/SOURCES.txt
 restish.egg-info/dependency_links.txt
