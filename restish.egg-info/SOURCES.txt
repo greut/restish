@@ -5,6 +5,7 @@ FAQ
 INSTALL
 NEWS
 README
+setup.cfg
 setup.py
 docs-build/Makefile
 docs-build/_module.rst
