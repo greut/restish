@@ -219,6 +219,24 @@ class TestPage(unittest.TestCase):
         assert response.headers.get('Link') == '<http://sho.rt/1>; rel=shorturl'
         assert response.headers.get('X-Foo') == 'Bar'
 
+    def test_page_decorator_acts_as_a_samourai(self):
+        def renderer(template, args, encoding=None):
+            return args['body']
+
+        class Resource(resource.Resource):
+            @resource.GET()
+            @templating.page('page')
+            def method_name(self, request):
+                pass
+
+        environ = {'restish.templating': templating.Templating(renderer)}
+        request = http.Request.blank('/', environ=environ)
+        try:
+            response = Resource()(request)
+            assert False, "Should raise an exception"
+        except Exception, e:
+            assert e.message.find("method_name") > -1
+
 
 if __name__ == '__main__':
     unittest.main()

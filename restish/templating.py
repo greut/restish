@@ -167,7 +167,10 @@ def page(template, type='text/html', encoding='utf-8'):
             args = func(page, request, *a, **k)
             if not isinstance(args, http.Response):
                 headers = []
-                if not isinstance(args, dict) and len(args) == 2:
+                if args is None:
+                    raise Exception("Please return a dict or an http.Response "
+                                    "(from %s)." % func.__name__)
+                elif not isinstance(args, dict) and len(args) == 2:
                     headers, args = args[0], args[1]
                 return render_response(request, page, template, args,
                                        type=type, encoding=encoding,
