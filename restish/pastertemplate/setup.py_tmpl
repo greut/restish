@@ -34,4 +34,6 @@ main = paste.script.appinstall:Installer
 [nose.plugins]
 restish = restish.contrib.noseutils:Plugin
       """,
+      test_suite="${package}.tests",
+      tests_require=['WebTest'],
       )

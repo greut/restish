@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
- 
+import webtest
+
 from restish import app, http, resource, templating, url
-from restish.util import wsgi_out
+
+
+def make_app(root):
+    return webtest.TestApp(app.RestishApp(root))
 
 
 class TestUrlFor(unittest.TestCase):
@@ -11,17 +15,20 @@ class TestUrlFor(unittest.TestCase):
         class Index(resource.Resource):
             @resource.GET()
             def get(self, request):
-                return http.ok([], "index")
+                return http.ok([('Content-Type', 'text/plain')],
+                               "index")
 
         class Entry(resource.Resource):
             @resource.GET()
             def get(self, request):
-                return http.ok([], "entry")
+                return http.ok([('Content-Type', 'text/plain')],
+                               "entry")
 
         class Blog(resource.Resource):
             @resource.GET()
             def get(self, request):
-                return http.ok([], "blog")
+                return http.ok([('Content-Type', 'text/plain')],
+                               "blog")
 
             @resource.child()
             def entry2(self, request, segments):
@@ -50,12 +57,10 @@ class TestUrlFor(unittest.TestCase):
                  ("/blog/entry", "entry"),
                 ]
         
-        A = app.RestishApp(Resource())
+        app = make_app(Resource())
         for path, body in tests:
-            environ = http.Request.blank(path).environ
-            response = wsgi_out(A, environ)
-            assert response["status"].startswith("200")
-            assert response["body"] == body
+            response = app.get(path, status=200)
+            assert response.body == body
         
         tests = [(Resource, "/"),
                  (Index, "/index"),
@@ -82,7 +87,8 @@ class TestUrlFor(unittest.TestCase):
 
             @resource.GET()
             def get(self, request):
-                return http.ok([], "entry (%s): %s" % (self.id, self.slug))
+                return http.ok([('Content-Type', 'text/plain')],
+                               "entry (%s): %s" % (self.id, self.slug))
 
         class Blog(resource.Resource):
             def __init__(self, blogname):
@@ -90,14 +96,16 @@ class TestUrlFor(unittest.TestCase):
 
             @resource.GET()
             def get(self, request):
-                return http.ok([], "blog: %s" % self.blogname)
+                return http.ok([('Content-Type', 'text/plain')],
+                               "blog: %s" % self.blogname)
 
             entry = resource.child("{id}/{slug}", Entry)
  
         class Resource(resource.Resource):
             @resource.GET()
             def index(self, request):
-                return http.ok([], "index")
+                return http.ok([('Content-Type', 'text/plain')],
+                               "index")
 
             blog = resource.child("{blogname}", Blog)
 
@@ -108,13 +116,10 @@ class TestUrlFor(unittest.TestCase):
                  ("/wordpress/2/hello world", "entry (2): hello world")
                 ]
         
-        A = app.RestishApp(Resource())
+        app = make_app(Resource())
         for path, body in tests:
-            environ = http.Request.blank(path).environ
-            response = wsgi_out(A, environ)
-            #print path, response["body"]
-            assert response["status"].startswith("200")
-            assert response["body"] == body
+            response = app.get(path, status=200)
+            assert response.body == body
         
         
         tests = [((Resource, {}), "/"),
@@ -142,7 +147,8 @@ class TestUrlFor(unittest.TestCase):
 
             @resource.GET()
             def get(self, request):
-                return http.ok([], "entry (%s): %s" % (self.id, self.slug))
+                return http.ok([('Content-Type', 'text/plain')],
+                               "entry (%s): %s" % (self.id, self.slug))
 
         class Blog(resource.Resource):
             def __init__(self, blogname):
@@ -150,14 +156,16 @@ class TestUrlFor(unittest.TestCase):
 
             @resource.GET()
             def get(self, request):
-                return http.ok([], "blog: %s" % self.blogname)
+                return http.ok([('Content-Type', 'text/plain')],
+                               "blog: %s" % self.blogname)
 
             entry = resource.child("_{id:[0-9]+}_/slug-{slug}", Entry)
  
         class Resource(resource.Resource):
             @resource.GET()
             def index(self, request):
-                return http.ok([], "index")
+                return http.ok([('Content-Type', 'text/plain')],
+                               "index")
 
             blog = resource.child("{blogname:[a-z]{4,}}-is-a-blog", Blog)
 
@@ -168,13 +176,10 @@ class TestUrlFor(unittest.TestCase):
                  ("/wordpress-is-a-blog/_2_/slug-hello world", "entry (2): hello world")
                 ]
         
-        A = app.RestishApp(Resource())
+        app = make_app(Resource())
         for path, body in tests:
-            environ = http.Request.blank(path).environ
-            response = wsgi_out(A, environ)
-            #print path, response["body"]
-            assert response["status"].startswith("200")
-            assert response["body"] == body
+            response = app.get(path, status=200)
+            assert response.body == body
         
         tests = [((Resource, {}), "/"),
                  ((Blog, {"blogname": "b2"}), "/b2-is-a-blog"),
@@ -195,7 +200,7 @@ class TestUrlFor(unittest.TestCase):
 
             @resource.GET()
             def get(self, request):
-                return http.ok([], self.title)
+                return http.ok([('Content-Type', 'text/plain')], self.title)
 
         class Resource(resource.Resource):
             category = resource.child("category/{category}/{title}", Book)
@@ -209,12 +214,10 @@ class TestUrlFor(unittest.TestCase):
                  ("/2009/11/08/3", "3")
                 ]
 
-        A = app.RestishApp(Resource())
+        app = make_app(Resource())
         for path, body in tests:
-            environ = http.Request.blank(path).environ
-            response = wsgi_out(A, environ)
-            assert response["status"].startswith("200")
-            assert response["body"] == body
+            response = app.get(path, status=200)
+            assert response.body == body
         
         assert resource.url_for(Book, title="4") == "/book/4"
         assert resource.url_for("book", title="5") == "/book/5"
@@ -238,12 +241,10 @@ class TestUrlFor(unittest.TestCase):
                  (u"£-ä", u"ä")
                 ]
     
-        A = app.RestishApp(Root())
+        app = make_app(Root())
         for path, body in tests:
-            req = http.Request.blank(url.join_path([path]))
-            response = wsgi_out(A, req.environ)
-            assert response["status"].startswith("200")
-            assert response["body"] == body
+            response = app.get(url.join_path([path]), status=200)
+            assert response.body == body
              
             assert resource.url_for("moo", arg=body) == url.join_path([path])
 
@@ -274,14 +275,12 @@ class TestUrlFor(unittest.TestCase):
                  ((u"£", u"$", u"€"), url.join_path([u"£", u"$", u"€"]))
                 ]
 
-        A = app.RestishApp(Root())
+        app = make_app(Root())
         for data, path in tests:
             obj = Data(*data)
             # request
-            req = http.Request.blank(path)
-            response = wsgi_out(A, req.environ)
-            assert response["status"].startswith("200")
-            assert response["body"] == str(obj)
+            response = app.get(path, status=200)
+            assert response.body == str(obj)
             # reverse url
             assert resource.url_for("abc", obj) == path
 

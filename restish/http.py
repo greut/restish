@@ -127,7 +127,7 @@ def ok(headers, body=''):
     return Response("200 OK", headers, body)
 
 
-def created(location, body, headers=None):
+def created(location, headers, body):
     """
     201 Created
 
@@ -208,7 +208,17 @@ def found(location):
     The status codes 303 and 307 have been added for servers that wish to make
     unambiguously clear which kind of reaction is expected of the client.
     """
-    return Response("302 Found", [('Location', url.URL(location))], None)
+    redirection_url = url.URL(location)
+    return Response("302 Found",
+                    [('Location', redirection_url),
+                     ('Content-Type', 'text/html')],
+                    """<!DOCTYPE html>
+<html>
+    <meta charset=utf-8>
+    <title>URL has changed</title>
+    <h1>New page is there</h1>
+    <p><a href="%s">%s</a></p>
+</html>""" % (redirection_url, location))
 
 
 def see_other(location):
@@ -376,6 +386,8 @@ def method_not_allowed(allow):
     identified by the Request-URI. The response MUST include an Allow header
     containing a list of valid methods for the requested resource.
     """
+    if isinstance(allow, list):
+        allow = ', '.join(allow)
     return Response("405 Method Not Allowed",
           [('Content-Type', 'text/plain'), \
            ('Allow', allow)], "405 Method Not Allowed")
