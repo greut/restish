@@ -50,7 +50,7 @@ class TestResource(unittest.TestCase):
         class Resource(resource.Resource):
             @resource.HEAD()
             def HEAD(self, request):
-                return http.ok([])
+                return http.ok([('Content-Type', 'text/plain')])
             @resource.GET()
             def GET(self, request):
                 return http.ok([('Content-Type', 'text/plain')], 'GET')
@@ -67,9 +67,8 @@ class TestResource(unittest.TestCase):
             app = make_app(Resource())
             response = getattr(app, method.lower())('/', status=200)
             assert response.body == method
-        # FIXME: HEAD cannot be tested using WebTest
-        #response = app.head("/", status=200)
-        #assert response.body == ""
+        response = app.request("/", method="HEAD", status=200)
+        assert response.body == ""
 
     def test_all_methods(self):
         class Resource(resource.Resource):

@@ -531,6 +531,7 @@ def _dispatch(request, match, func):
             response.headers['content-type'] = best_match
     if request.method is HEAD.method:
         # Emptying a GET that has been called as a HEAD
+        response.headers['content-length'] = len(response.body)
         response.body = ''
     return response
 

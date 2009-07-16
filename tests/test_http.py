@@ -88,6 +88,7 @@ class TestSuccessResponseFactories(unittest.TestCase):
         r = http.found(location)
         assert r.status.startswith('302')
         assert r.headers['Location'] == location
+        assert r.headers['Content-Length'] != "0"
 
         location = u'http://☃.net/'
         r = http.found(location)
