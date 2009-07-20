@@ -35,7 +35,7 @@ or database engine.
       author_email='developers@ish.io',
       url='http://ish.io/projects/show/restish',
       license='BSD',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=find_packages(exclude=['ez_setup', 'tests']),
       include_package_data=True,
       zip_safe=False,
       install_requires=[
