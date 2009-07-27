@@ -14,7 +14,7 @@ setup(name='${project}',
       author_email='',
       url='',
       license='',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      packages=find_packages(exclude=['tests']),
       include_package_data=True,
       zip_safe=False,
       install_requires=[
@@ -22,7 +22,6 @@ setup(name='${project}',
           'restish',
           'WebError',
       ],
-      test_suite='nose.collector',
       entry_points="""
       # -*- Entry points: -*-
 [paste.app_factory]
@@ -30,10 +29,7 @@ main = ${package}.wsgiapp:make_app
 
 [paste.app_install]
 main = paste.script.appinstall:Installer
-
-[nose.plugins]
-restish = restish.contrib.noseutils:Plugin
       """,
-      test_suite="${package}.tests",
+      test_suite="tests",
       tests_require=['WebTest'],
       )
