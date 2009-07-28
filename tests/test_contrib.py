@@ -4,6 +4,7 @@ import os.path
 import shutil
 import tempfile
 import unittest
+import warnings
 
 from restish import http, templating
 from restish.contrib import appurl
@@ -86,6 +87,11 @@ class RendererTestMixin(object):
             'restish.templating': templating.Templating(self.renderer)})
         assert templating.render(request, 'static') == self.content('static')
 
+    def test_render_vars(self):
+        request = http.Request.blank('/', environ={
+            'restish.templating': templating.Templating(self.renderer)})
+        assert templating.render(request, 'dynamic', {'foo': 'bar'}) == '<p>bar</p>'
+
     def test_render_different_encoding(self):
         request = http.Request.blank('/', environ={
             'restish.templating': templating.Templating(self.renderer)})
@@ -115,8 +121,9 @@ try:
             super(TestMakoRenderer, self).setUp()
             self.renderer = makorenderer.MakoRenderer(
                 directories=self.tmpdir, input_encoding='utf-8')
+            self.add_content('dynamic', '<p>${foo}</p>')
 except ImportError:
-    pass
+    warnings.warn('Skipping MakoRenderer tests due to missing packages.', RuntimeWarning)
 
 
 try:
@@ -127,8 +134,9 @@ try:
             super(TestJinja2Renderer, self).setUp()
             self.renderer = jinja2renderer.Jinja2Renderer(
                 loader=jinja2.FileSystemLoader(self.tmpdir))
+            self.add_content('dynamic', '<p>{{foo}}</p>')
 except ImportError:
-    pass
+    warnings.warn('Skipping Jinja2Renderer tests due to missing packages.', RuntimeWarning)
 
 
 try:
@@ -139,8 +147,9 @@ try:
             super(TestGenshiRenderer, self).setUp()
             self.renderer = genshirenderer.GenshiRenderer(
                 loader.directory(self.tmpdir))
+            self.add_content('dynamic', '<p>${foo}</p>')
 except ImportError:
-    pass
+    warnings.warn('Skipping GenshiRenderer tests due to missing packages.', RuntimeWarning)
 
 
 try:
@@ -150,8 +159,28 @@ try:
             super(TestTempitaRenderer, self).setUp()
             self.renderer = tempitarenderer.TempitaRenderer(
                 tempitarenderer.TempitaFileSystemLoader(self.tmpdir))
+            self.add_content('dynamic', '<p>{{foo}}</p>')
 except ImportError:
-    pass
+    warnings.warn('Skipping TempitaRenderer tests due to missing packages.', RuntimeWarning)
+
+
+try:
+    from restish.contrib import djangorenderer
+    from django.conf import settings
+    class TestDjangoRenderer(RendererTestMixin, unittest.TestCase):
+        def setUp(self):
+            super(TestDjangoRenderer, self).setUp()
+            self.renderer = djangorenderer.DjangoRenderer()
+            self.add_content('dynamic', '<p>{{ foo }}</p>')
+            # Configure Django's global config a bit. Yuck, yuck, yuck!
+            if not settings.configured:
+                settings.configure(
+                    TEMPLATE_LOADERS=['django.template.loaders.filesystem.load_template_source'],
+                )
+            # Configure the per-test settings.
+            settings.TEMPLATE_DIRS = [self.tmpdir]
+except ImportError:
+    warnings.warn('Skipping DjangoRenderer tests due to missing packages.', RuntimeWarning)
 
 
 if __name__ == '__main__':

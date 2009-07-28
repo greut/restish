@@ -2,6 +2,7 @@
 HTTP Request and Response objects, simple Response factories and exceptions
 types for common HTTP errors.
 """
+import cgi
 import webob
 import urllib
 
@@ -156,12 +157,16 @@ def created(location, headers, body):
 
 # Redirection 3xx
 
-_REDIRECTION_PAGE = """<HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">
-<TITLE>%(status)s</TITLE></HEAD><BODY>
-<H1>%(status)s</H1>
-<P>The document has moved
-<A HREF="%(url)s">here: %(location)s</A>.</P>
-</BODY></HTML>"""
+_REDIRECTION_PAGE = """<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<title>%(status)s</title>
+</head>
+<body>
+<h1>%(status)s</h1>
+<p>This document has moved to <a href="%(url)s">%(location)s</a>.</p>
+</body>
+</html>"""
 
 def _redirect(status, location, body=None):
     """
@@ -169,18 +174,14 @@ def _redirect(status, location, body=None):
      * 301 Moved Permanently
      * 302 Found
      * 303 See Other
-
-    They requires a content if the request method isn't HEAD.
-
-    HEAD is handled in resource._dispatch in a generic manner.
     """
     redirection_url = url.URL(location)
     body = _REDIRECTION_PAGE % {"status": status,
-                                "url": redirection_url,
-                                "location": location}
+                                "url": cgi.escape(redirection_url),
+                                "location": cgi.escape(location)}
     return Response(status,
                     [('Location', redirection_url),
-                     ('Content-Type', 'text/html')],
+                     ('Content-Type', 'text/html; charset=utf-8')],
                     body)
 
 
@@ -237,6 +238,7 @@ def found(location):
     unambiguously clear which kind of reaction is expected of the client.
     """
     return _redirect("302 Found", location)
+
 
 def see_other(location):
     """
@@ -564,4 +566,3 @@ class GatewayTimeoutError(error.HTTPServerError):
     504 Gateway Timeout exception.
     """
     response_factory = staticmethod(gateway_timeout)
-

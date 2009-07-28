@@ -50,5 +50,11 @@ or database engine.
       restish = restish.pastertemplate:RestishTemplate
       """,
       test_suite='tests',
-      tests_require=['WebTest', 'Jinja2', 'mako', 'Genshi', 'Tempita'],
+      tests_require=['WebTest',
+                     'Jinja2',
+                     'mako',
+                     'Genshi',
+                     'Tempita',
+                     'Django'
+       ]
       )
