@@ -194,6 +194,18 @@ class TestURL(unittest.TestCase):
             "http://www.foo.com:80/a/nice/path/gong%2Fdouble%2F",
             urlpath.child('gong/double/'))
 
+    def test_child_with_querystring(self):
+        urlpath = url.URL("http://example.org/foo?fizz=0&buzz=1%202")
+        self.assertEquals("http://example.org/foo/bar?fizz=0&buzz=1%202",
+                          urlpath.child("bar", keep_queries=True))
+        self.assertEquals("http://example.org/foo/bar?buzz=1%202",
+                          urlpath.child("bar", keep_queries=["buzz"]))
+
+
+        urlpath = url.URL("http://example.org/?a=b&c=d&e=f")
+        self.assertEquals("http://example.org/bar?a=b&e=f",
+                          urlpath.child("bar", keep_queries=["a","e"]))
+
     def test_childs(self):
         self.assertEquals(url.URL('http://localhost/foo').child('bar'), 'http://localhost/foo/bar')
         self.assertEquals(url.URL('http://localhost/foo').child('bar', 'woo'), 'http://localhost/foo/bar/woo')

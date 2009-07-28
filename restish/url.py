@@ -1,6 +1,7 @@
 import urlparse
 import urllib
 
+from webob import MultiDict, parse_qsl
 
 # Lists of characters considered "safe", i.e. should not be escape encoded.
 SAFE = '-_.!*\'()~'
@@ -85,6 +86,11 @@ def join_query(query_list):
         else:
             return '%s=%s' % (_quote(_encode(K), SAFE_QUERY_NAME), \
                               _quote(_encode(V), SAFE_QUERY_VALUE))
+    
+    # Support for dict (like MultiDict) based query list
+    if hasattr(query_list, 'iteritems'):
+        query_list = list(query_list.iteritems())
+    
     return '&'.join(one(KV) for KV in query_list)
 
 
@@ -229,7 +235,7 @@ class URL(str):
         l[-1] = segment
         return self.clone(path=join_path(l), query=None, fragment=None)
 
-    def child(self, *path):
+    def child(self, *path, **kwargs):
         """
         Construct a url where the given path segment is a child of this url
         """
@@ -238,7 +244,26 @@ class URL(str):
             l[-1:] = path
         else:
             l.extend(path)
-        return self.clone(path=join_path(l), query=None, fragment=None)
+
+        query = fragment = None
+        
+        keep_queries = kwargs.get("keep_queries")
+        if keep_queries:
+            if hasattr(keep_queries, "__iter__"):
+                qs = MultiDict(parse_qsl(self.query))
+                newqs = MultiDict()
+                for keep in keep_queries:
+                    if keep in qs:
+                        newqs[keep] = qs[keep]
+
+                query = join_query(newqs)
+            else:
+                query = self.query
+
+        if kwargs.get("keep_fragment"):
+            fragment = self.fragment
+        
+        return self.clone(path=join_path(l), query=query, fragment=fragment)
 
     def parent(self):
         """
