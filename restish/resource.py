@@ -1,6 +1,8 @@
 """
 Base Resource class and associates methods for children and content negotiation
 """
+
+import inspect
 import mimetypes
 import re
 import mimeparse
@@ -18,7 +20,9 @@ SHORT_CONTENT_TYPE_EXTRA = {
         'json': 'application/json',
         }
 
+
 PYTHON_STRING_VARS = re.compile(r"%\(([^\)]+)\)s")
+
 
 def child(matcher=None, klass=None, canonical=False, with_parent=False):
     if klass is None and not isinstance(matcher, _metaResource):
@@ -63,6 +67,7 @@ def url_for(cls, *args, **kwargs):
     url_for(Klass, {"arg1":"val1", "arg2": "val2"})
     url_for(Klass, obj)
     """
+
     if isinstance(cls, basestring):
         classname = cls.lower()
         cls = Resource._resources.get(classname, None)
@@ -331,6 +336,7 @@ class HEAD(MethodDecorator):
     """http HEAD method"""
     method = 'HEAD'
 
+
 class OPTIONS(MethodDecorator):
     """http OPTIONS method"""
     method = 'OPTIONS'
@@ -365,22 +371,25 @@ class _metaResource(type):
     """
     def __new__(cls, name, bases, clsattrs):
         cls = type.__new__(cls, name, bases, clsattrs)
-        _gather_request_dispatchers(cls, clsattrs)
+        _gather_request_dispatchers(cls)
         _gather_child_factories(cls, clsattrs)
         return cls
 
 
-def _gather_request_dispatchers(cls, clsattrs):
+def _gather_request_dispatchers(cls):
     """
     Gather any request handler -annotated methods and add them to the class's
     request_dispatchers attribute.
     """
-    # Copy the super class's 'request_dispatchers' dict (if any) to this class.
-    cls.request_dispatchers = dict(getattr(cls, 'request_dispatchers', {}))
-    for wrapper in _find_annotated_funcs(clsattrs, _RESTISH_METHOD):
-        method = getattr(wrapper, _RESTISH_METHOD, None)
-        match = getattr(wrapper, _RESTISH_MATCH)
-        cls.request_dispatchers.setdefault(method, []).append((wrapper.func, match))
+    cls.request_dispatchers = {}
+    for cls in inspect.getmro(cls):
+        for name, wrapper in inspect.getmembers(cls):
+            method = getattr(wrapper, _RESTISH_METHOD, None)
+            if not method:
+                continue
+            match = getattr(wrapper, _RESTISH_MATCH)
+            cls.request_dispatchers.setdefault(method, []) \
+                                   .append((wrapper.func, match))
 
 
 def _gather_child_factories(cls, clsattrs):
@@ -471,17 +480,12 @@ class Resource(object):
         dispatchers = self.request_dispatchers.get(request.method)
         # No normal dispatchers for method found,
         if dispatchers is None:
-            if request.method == HEAD.method:
-                # HEAD is (almost) GET
-                dispatchers = self.request_dispatchers.get(GET.method)
-                
+            # Looking for a magic dispatcher
+            dispatchers = self.request_dispatchers.get(ALL.method)
+            # No magic dispatchers found either,
+            # send 405 with list of allowed methods.
             if dispatchers is None:
-                # Looking for a magic dispatcher
-                dispatchers = self.request_dispatchers.get(ALL.method)
-                # No magic dispatchers found either,
-                # send 405 with list of allowed methods.
-                if dispatchers is None:
-                    return http.method_not_allowed(', '.join(self.request_dispatchers))
+                return http.method_not_allowed(', '.join(self.request_dispatchers))
         # Look up the best dispatcher
         dispatcher = _best_dispatcher(dispatchers, request)
         if dispatcher is not None:
@@ -490,7 +494,28 @@ class Resource(object):
         # No match, send 406
         return http.not_acceptable([('Content-Type', 'text/plain')], \
                                    '406 Not Acceptable')
-    
+
+    @HEAD()
+    def head(self, request):
+        """
+        Handle a HEAD request by calling the resource again as if a GET was
+        sent and then discarding the content.
+
+        This default HEAD behaviour works very well for dynamically generated
+        content. However, it is not suitable for static content where the size
+        is already known, e.g. large blobs stored in a database.
+
+        In that scenario add a HEAD-decorated method to the application
+        resource's class that includes a Content-Length header but no body.
+        """
+        request.method = 'GET'
+        response = self(request)
+        content_length = response.headers.get('content-length')
+        response.body = ''
+        if content_length is not None:
+            response.headers['content-length'] = content_length
+        return response
+
     @classmethod
     def _url_for(cls, *args, **kwargs):
         """
@@ -529,10 +554,7 @@ def _dispatch(request, match, func):
             best_match = mimeparse.best_match(match['accept'], accept)
         if '*' not in best_match:
             response.headers['content-type'] = best_match
-    if request.method is HEAD.method:
-        # Emptying a GET that has been called as a HEAD
-        response.headers['content-length'] = len(response.body)
-        response.body = ''
+    
     return response
 
 

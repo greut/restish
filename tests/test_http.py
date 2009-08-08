@@ -58,6 +58,10 @@ class TestResponseCreation(unittest.TestCase):
     def test_init_with_none(self):
         return http.Response('200 OK', [], None)
 
+    def test_init_with_none_maintains_content_length(self):
+        response = http.Response('200 OK', [('Content-Length', 10)], None)
+        assert response.headers['Content-Length'] == 10
+
     def test_no_implicit_headers(self):
         r = http.Response('200 OK', [], None)
         assert r.headers == {'Content-Length': '0'}
@@ -115,8 +119,7 @@ class TestRedirectionResponseFactories(unittest.TestCase):
         assert r.status.startswith('302')
         assert r.headers['Location'] == 'http://xn--n3h.net/'
         assert r.headers['Content-Length']
-        assert '302 Found' in r.body
-        assert cgi.escape(location) in r.body
+        assert cgi.escape(location.encode("utf-8")) in r.body
         assert cgi.escape(url.URL(location)) in r.body
 
     def test_see_other(self):

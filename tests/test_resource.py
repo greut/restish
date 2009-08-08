@@ -98,6 +98,61 @@ class TestResource(unittest.TestCase):
                              extra_environ={"REQUEST_METHOD":method},
                              status=200)
             assert response.body == body
+
+    def test_derived(self):
+        class Base(resource.Resource):
+            @resource.GET(accept='text')
+            def text(self, request):
+                return http.ok([], 'Base')
+            @resource.GET(accept='html')
+            def html(self, request):
+                return http.ok([], '<p>Base</p>')
+        class Derived(Base):
+            @resource.GET(accept='html')
+            def html(self, request):
+                return http.ok([], '<p>Derived</p>')
+            @resource.GET(accept='json')
+            def json(self, request):
+                return http.ok([], '"Derived"')
+        app = make_app(Derived())
+        assert app.get('/', headers={'Accept': 'text/plain'}, status=200).body == 'Base'
+        assert app.get('/', headers={'Accept': 'text/html'}, status=200).body == '<p>Derived</p>'
+        assert app.get('/', headers={'Accept': 'application/json'}, status=200).body == '"Derived"'
+
+    def test_derived_specificity(self):
+        class Base(resource.Resource):
+            @resource.GET(accept='text/*')
+            def text(self, request):
+                return http.ok([('Content-Type', 'text/html')], 'Base')
+        class Derived(Base):
+            @resource.GET(accept='text/plain')
+            def html(self, request):
+                return http.ok([], 'Derived')
+        app = make_app(Derived())
+        assert app.get('/', headers={'Accept': 'text/plain'}, status=200).body == 'Derived'
+        assert app.get('/', headers={'Accept': 'text/html'}, status=200).body == 'Base'
+
+    def test_default_head(self):
+        class Resource(resource.Resource):
+            @resource.GET()
+            def text(self, request):
+                return http.ok([('Content-Type', 'text/plain')], 'text')
+        get_response = Resource()(http.Request.blank('/', environ={'REQUEST_METHOD': 'GET'}))
+        head_response = Resource()(http.Request.blank('/', environ={'REQUEST_METHOD': 'HEAD'}))
+        assert head_response.headers['content-length'] == get_response.headers['content-length']
+        assert head_response.body == ''
+
+    def test_specialised_head(self):
+        class Resource(resource.Resource):
+            @resource.GET()
+            def text(self, request):
+                return http.ok([('Content-Type', 'text/plain')], 'text')
+            @resource.HEAD()
+            def head(self, request):
+                return http.ok([('Content-Type', 'text/plain'), ('Content-Length', '100')], None)
+        head_response = Resource()(http.Request.blank('/', environ={'REQUEST_METHOD': 'HEAD'}))
+        assert head_response.headers['content-length'] == '100'
+        assert head_response.body == ''
     
     def test_head_method(self):
         class Resource(resource.Resource):
@@ -393,7 +448,8 @@ class TestChildLookup(unittest.TestCase):
                 ('/1-suffix', 'suffix 1'),
                 ('/feeds/rss.xml', 'feed rss'),
                 ('/feeds/atom.xml', 'feed atom'),
-                (url._quote(u'/£+yøan'.encode('utf-8')), u'user yøan'),
+                (url._quote(u'/£+yøan'.encode('utf-8')),
+                 u'user yøan'.encode('utf-8')),
                 ]
 
         A = app.RestishApp(Resource())

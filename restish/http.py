@@ -96,13 +96,30 @@ class Response(webob.Response):
     def __init__(self, status, headers, body):
         kwargs = {'status': status,
                   'headerlist': headers}
+        # XXX webob workaround. I can't see a way to create an empty response
+        # *with* a content-length, as is common for a HEAD response. So, a
+        # workaround is that if there is no body, i.e. None, then we capture
+        # the content-length and set the header once webob's initialiser has
+        # finished.
+        charset = None
+        content_length = None
         if body is None:
-            pass
-        elif isinstance(body, str):
-            kwargs['body'] = body
+            header_dict = dict([(key.lower(), val) for (key, val) in headers])
+            content_length = header_dict.get('content-length')
+        elif isinstance(body, basestring):
+            if isinstance(body, unicode):
+                kwargs['charset'] = 'utf-8'
+                kwargs['unicode_body'] = body
+            else:
+                kwargs['body'] = body
         else:
             kwargs['app_iter'] = body
-        webob.Response.__init__(self, **kwargs)
+        
+        super(Response, self).__init__(**kwargs)
+        
+        # XXX webob workaround. see above
+        if content_length is not None:
+            self.headers['Content-Length'] = content_length
 
 
 # Successful 2xx

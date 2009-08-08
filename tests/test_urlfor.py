@@ -233,18 +233,18 @@ class TestUrlFor(unittest.TestCase):
             def __call__(self, segments):
                 return http.ok([("Content-type", "text/plain; charset=utf-8")],
                                 self.arg)
-    
+
         class Root(resource.Resource):
             moo = resource.child(u"£-{arg}", Moo)
-        
+
         tests = [(u"£-a", u"a"),
                  (u"£-ä", u"ä")
                 ]
-    
+
         app = make_app(Root())
         for path, body in tests:
             response = app.get(url.join_path([path]), status=200)
-            assert response.body == body
+            assert response.body == body.encode("utf-8")
              
             assert resource.url_for("moo", arg=body) == url.join_path([path])
 
