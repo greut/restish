@@ -221,33 +221,17 @@ class URL(str):
     
     ## path manipulations ##
 
-    def root(self):
-        """
-        Contruct a URL to the root of the web server.
-        """
-        return self.clone(path='/', query=None, fragment=None)
+    def _keep_fragment(self, keep_fragment):
+        fragment = None
 
-    def sibling(self, segment):
-        """
-        Construct a url where the given path segment is a sibling of this url
-        """
-        l = list(self.path_segments)
-        l[-1] = segment
-        return self.clone(path=join_path(l), query=None, fragment=None)
+        if keep_fragment:
+            fragment = self.fragment
 
-    def child(self, *path, **kwargs):
-        """
-        Construct a url where the given path segment is a child of this url
-        """
-        l = list(self.path_segments)
-        if l[-1:] == ['']:
-            l[-1:] = path
-        else:
-            l.extend(path)
+        return fragment
 
-        query = fragment = None
-        
-        keep_queries = kwargs.get("keep_queries")
+    def _keep_queries(self, keep_queries):
+        query = None
+
         if keep_queries:
             if hasattr(keep_queries, "__iter__"):
                 qs = MultiDict(parse_qsl(self.query))
@@ -260,18 +244,53 @@ class URL(str):
             else:
                 query = self.query
 
-        if kwargs.get("keep_fragment"):
-            fragment = self.fragment
+        return query
+
+
+    def root(self):
+        """
+        Contruct a URL to the root of the web server.
+        """
+        return self.clone(path='/', query=None, fragment=None)
+
+    def sibling(self, segment, **kwargs):
+        """
+        Construct a url where the given path segment is a sibling of this url
+        """
+        l = list(self.path_segments)
+        l[-1] = segment
+        
+        query = self._keep_queries(kwargs.get("keep_queries", None))
+        fragment = self._keep_fragment(kwargs.get("keep_fragment", None))
+        
+        return self.clone(path=join_path(l), query=query, fragment=None)
+
+    def child(self, *path, **kwargs):
+        """
+        Construct a url where the given path segment is a child of this url
+        """
+        l = list(self.path_segments)
+        if l[-1:] == ['']:
+            l[-1:] = path
+        else:
+            l.extend(path)
+        
+        query = self._keep_queries(kwargs.get("keep_queries", None))
+        fragment = self._keep_fragment(kwargs.get("keep_fragment", None))
         
         return self.clone(path=join_path(l), query=query, fragment=fragment)
 
-    def parent(self):
+    def parent(self, **kwargs):
         """
         Pop a URL segment from this url.
         """
         l = list(self.path_segments)
         l.pop()
-        return self.clone(path=join_path(l), query=None, fragment=None)
+        
+        query = self._keep_queries(kwargs.get("keep_queries", None))
+        fragment = self._keep_fragment(kwargs.get("keep_fragment", None))
+
+        return self.clone(path=join_path(l), query=query, fragment=fragment)
     
     def click(self, href):
         """
@@ -290,7 +309,7 @@ class URL(str):
                               path=path, query=query, fragment=fragment)
         else:
             scheme = self.scheme
-
+        
         # Copy less specific missing parts of the URL from the current URL. We
         # don't need to worry about copying the fragment because an empty click
         # URL is handled above.
