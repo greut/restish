@@ -1,4 +1,5 @@
 [app:${package}]
 use = egg:${project}
+charset = utf-8
 cache_dir = %(CACHE_DIR)s
 

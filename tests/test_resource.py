@@ -67,6 +67,7 @@ class TestResource(unittest.TestCase):
             app = make_app(Resource())
             response = getattr(app, method.lower())('/', status=200)
             assert response.body == method
+        
         response = app.request("/", method="HEAD", status=200)
         assert response.body == ""
 
@@ -94,10 +95,10 @@ class TestResource(unittest.TestCase):
         
         A = make_app(Resource())
         for method, body  in tests:
-            response = A.get("/",
-                             extra_environ={"REQUEST_METHOD":method},
-                             status=200)
-            assert response.body == body
+            response = A.request("/",
+                                 method=method,
+                                 status=200)
+            assert response.body == body, "%s != %s" % (response.body, body)
 
     def test_derived(self):
         class Base(resource.Resource):

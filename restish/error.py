@@ -2,7 +2,6 @@ class RestishException(Exception):
     """
     Base class for all restish exceptions.
     """
-    pass
 
 
 class HTTPError(RestishException):

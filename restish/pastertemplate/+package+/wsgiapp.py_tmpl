@@ -17,7 +17,7 @@ def make_app(global_conf, **app_conf):
     Called by PasteDeply (or a compatable WSGI application host) to create the
     ${package} WSGI application.
     """
-    app = RestishApp(root.Root())
+    app = RestishApp(root.Root(), app_conf.get("charset"))
     app = setup_environ(app, global_conf, app_conf)
     
     if "document_root" in app_conf:

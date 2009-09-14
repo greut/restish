@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 import webtest
 
@@ -159,6 +161,22 @@ class TestApp(unittest.TestCase):
             return http.ok([('Content-Type', 'text/plain')], gen())
         A = app.RestishApp(resource)
         assert webtest.TestApp(A).get('/').body == 'Three ... two ... one ... BANG!'
+
+    def test_charset(self):
+        class Resource(resource.Resource):
+            def __call__(self, request):
+                return http.ok([('Content-Type', 'text/plain')],
+                               (request.params["foo"],
+                                " is a ",
+                                type(request.params["foo"]).__name__))
+
+        testapp = webtest.TestApp(app.RestishApp(Resource()))
+        assert testapp.get('/?foo=bar').body == "bar is a str"
+        assert testapp.get('/?foo=£').body == "£ is a str"
+        
+        testapp = webtest.TestApp(app.RestishApp(Resource(), "utf-8"))
+        assert testapp.get('/?foo=bar').body == u"bar is a unicode"
+        assert testapp.get('/?foo=£').body == u"£ is a unicode"
 
 
 class CallableResource(object):

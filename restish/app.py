@@ -6,12 +6,16 @@ from restish import error, http, url
 
 class RestishApp(object):
 
-    def __init__(self, root_resource):
+    def __init__(self, root_resource, charset=None):
         self.root = root_resource
+        # the charset in which the request is parsed
+        self.charset = charset
 
     def __call__(self, environ, start_response):
         # Create a request object.
         request = http.Request(environ)
+        if self.charset is not None:
+            request.charset = self.charset
         try:
             # Locate the resource and convert it to a response.
             resource_or_response = self.locate_resource(request)

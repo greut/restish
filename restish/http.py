@@ -24,8 +24,6 @@ class Request(webob.Request):
 
     def __init__(self, environ):
         webob.Request.__init__(self, environ)
-        # FIXME: not safe, but where should I put this? -- Yoan
-        self.charset = "utf-8"
 
     @property
     def host_url(self):
@@ -184,6 +182,7 @@ _REDIRECTION_PAGE = """<html>
 <p>This document has moved to <a href="%(url)s">%(location)s</a>.</p>
 </body>
 </html>"""
+
 
 def _redirect(status, location, body=None):
     """
@@ -425,8 +424,9 @@ def method_not_allowed(allow):
     if isinstance(allow, list):
         allow = ', '.join(allow)
     return Response("405 Method Not Allowed",
-          [('Content-Type', 'text/plain'), \
-           ('Allow', allow)], "405 Method Not Allowed")
+                    [('Content-Type', 'text/plain'),
+                     ('Allow', allow)],
+                    "405 Method Not Allowed")
 
 
 class MethodNotAllowedError(error.HTTPClientError):
