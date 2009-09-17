@@ -77,7 +77,7 @@ class TestUrlFor(unittest.TestCase):
                 ]
 
         for klass, url in tests:
-            assert resource.url_for(klass) == url, "%s != %s" % (url, resource.url_for(klass))
+            assert resource.url_for(klass) == url
     
     def test_with_matchers(self):
         class Entry(resource.Resource):

@@ -98,7 +98,7 @@ class TestResource(unittest.TestCase):
             response = A.request("/",
                                  method=method,
                                  status=200)
-            assert response.body == body, "%s != %s" % (response.body, body)
+            assert response.body == body
 
     def test_derived(self):
         class Base(resource.Resource):
