@@ -371,25 +371,27 @@ class _metaResource(type):
     """
     def __new__(cls, name, bases, clsattrs):
         cls = type.__new__(cls, name, bases, clsattrs)
-        _gather_request_dispatchers(cls)
+        _gather_request_dispatchers(cls, clsattrs)
         _gather_child_factories(cls, clsattrs)
         return cls
 
 
-def _gather_request_dispatchers(cls):
+def _gather_request_dispatchers(cls, clsattrs):
     """
     Gather any request handler -annotated methods and add them to the class's
     request_dispatchers attribute.
     """
-    cls.request_dispatchers = {}
-    for cls in inspect.getmro(cls):
-        for name, wrapper in inspect.getmembers(cls):
-            method = getattr(wrapper, _RESTISH_METHOD, None)
-            if not method:
-                continue
-            match = getattr(wrapper, _RESTISH_MATCH)
-            cls.request_dispatchers.setdefault(method, []) \
-                                   .append((wrapper.func, match))
+    # Collect the request handlers that *this* class adds first.
+    request_dispatchers = {}
+    for wrapper in _find_annotated_funcs(clsattrs, _RESTISH_METHOD):
+        method = getattr(wrapper, _RESTISH_METHOD, None)
+        match = getattr(wrapper, _RESTISH_MATCH)
+        request_dispatchers.setdefault(method, []).append((wrapper.func, match))
+    # Append any handlers that were added by base classes.
+    for method, dispatchers in getattr(cls, 'request_dispatchers', {}).iteritems():
+        request_dispatchers.setdefault(method, []).extend(dispatchers)
+    # Set the handlers on the class.
+    cls.request_dispatchers = request_dispatchers
 
 
 def _gather_child_factories(cls, clsattrs):

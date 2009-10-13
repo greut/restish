@@ -41,6 +41,54 @@ class TestResourceFunc(unittest.TestCase):
         response = make_app(func).get('/', headers={'Accept': 'text/html'}, status=406)
 
 
+class TestResourceMetaclass(unittest.TestCase):
+
+    def test_leaking_request_handlers(self):
+        # Check that request handlers from a resource class do not leak into
+        # a sibling class.
+        class Base(resource.Resource):
+            @resource.POST(accept='json')
+            def POST(self, request):
+                pass
+        class Derived1(Base):
+            pass
+        class Derived2(Base):
+            @resource.POST(accept='csv')
+            def bulk_load_csv(self, request):
+                pass
+        assert len(Base.request_dispatchers['POST']) == 1
+        assert len(Derived1.request_dispatchers['POST']) == 1
+        assert len(Derived2.request_dispatchers['POST']) == 2
+
+    def test_leaking_child_factories(self):
+        # Check that child factories from a resource class do not leak into a
+        # sibling class.
+        class Base(resource.Resource):
+            @resource.child()
+            def foo(self, request, segments):
+                pass
+        class Derived1(Base):
+            pass
+        class Derived2(Base):
+            @resource.child()
+            def bar(self, request, segments):
+                pass
+        assert len(Base.child_factories) == 1
+        assert len(Derived1.child_factories) == 1
+        assert len(Derived2.child_factories) == 2
+
+    def test_non_accumulation(self):
+        # Check request handlers from base handlers are not duplicated during
+        # request handler collection.
+        class Base(resource.Resource):
+            @resource.GET()
+            def json(self, request):
+                pass
+        class Derived(Base):
+            pass
+        assert len(Derived.request_dispatchers['GET']) == 1
+
+
 class TestResource(unittest.TestCase):
     
     def test_no_method_handler(self):

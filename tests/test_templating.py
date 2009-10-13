@@ -235,7 +235,7 @@ class TestPage(unittest.TestCase):
             response = Resource()(request)
             assert False, "Should raise an exception"
         except Exception, e:
-            assert e.message.find("method_name") > -1
+            assert str(e).find("method_name") > -1
 
 
 if __name__ == '__main__':
