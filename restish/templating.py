@@ -135,7 +135,10 @@ def render_response(request, page, template, args={},
     :arg headers:
         Optional extra HTTP headers for the output, default to []
     """
-    headers.append(('Content-Type', '%s; charset=%s' % (type, encoding)))
+    # Copy the headers to avoid changing the arg default or the list passed by
+    # the caller.
+    headers = list(headers)
+    headers.extend([('Content-Type', '%s; charset=%s' % (type, encoding))])
     return http.ok(headers,
                    render_page(request, page, template, args,
                                encoding=encoding))
@@ -164,19 +167,22 @@ def page(template, type='text/html', encoding='utf-8'):
     """
     def decorator(func):
         def decorated(page, request, *a, **k):
-            args = func(page, request, *a, **k)
-            if not isinstance(args, http.Response):
-                headers = []
-                if args is None:
+            result = func(page, request, *a, **k)
+            # The returned value can be either an http.Response,
+            # an (headers, args) tuple or just an args dict.
+            if not isinstance(result, http.Response):
+                if result is None:
                     raise Exception("Please return a dict or an http.Response "
                                     "(from %s)." % func.__name__)
-                elif not isinstance(args, dict) and len(args) == 2:
-                    headers, args = args[0], args[1]
+                elif not isinstance(result, dict) and len(result) == 2:
+                    headers, args = result
+                else:
+                    headers, args = [], result
                 return render_response(request, page, template, args,
                                        type=type, encoding=encoding,
                                        headers=headers)
             else:
-                return args
+                return result
         decorated.__name__ = func.func_name
         return decorated
     return decorator
