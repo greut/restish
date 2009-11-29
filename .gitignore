@@ -1,6 +1,7 @@
 build
 dist
 *.pyc
-.*.swp
+*.swp
 .coverage
-docs/doctrees
+doctrees
+html

@@ -31,8 +31,8 @@ def child(matcher=None, klass=None, canonical=False, with_parent=False):
             # No matcher? Use the function name.
             if matcher is None:
                 matcher = func.__name__
-            # If the matcher is a string then create a TemplateChildMatcher in its
-            # place.
+            # If the matcher is a string then create a
+            # TemplateChildMatcher in its place.
             if isinstance(matcher, basestring):
                 matcher = TemplateChildMatcher(matcher)
             # Annotate the function.
@@ -127,6 +127,9 @@ class TemplateChildMatcher(object):
         self.canonical = canonical
         self._calc_score()
         self._compile()
+
+    def __repr__(self):
+        return '<TemplateChildMatcher "%s">' % self.pattern
 
     def _calc_score(self):
         """Return the score for this element"""
@@ -476,6 +479,7 @@ class Resource(object):
             return result
         else:
             return result, segments
+
 
     def __call__(self, request):
         # Get the dispatchers for the request method.

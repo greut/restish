@@ -221,7 +221,7 @@ class TestResource(unittest.TestCase):
 
 
 class TestChildLookup(unittest.TestCase):
-    
+
     def test_404(self):
         class Resource(resource.Resource):
             pass
@@ -309,7 +309,7 @@ class TestChildLookup(unittest.TestCase):
         R = webtest.TestApp(A).get(url.join_path([u'éxpliçítly_nämed_child_with_unicøde']))
         assert R.status.startswith('200')
         assert R.body == 'explicitly_named_child_with_unicode'
-    
+   
     def test_segment_consumption(self):
         class Resource(resource.Resource):
             def __init__(self, segments=[]):
@@ -432,7 +432,6 @@ class TestChildLookup(unittest.TestCase):
         for path, expected in tests:
             R = webtest.TestApp(A).get(path)
             assert R.body == expected
-
     
     def test_regex_match(self):
         class Resource(resource.Resource):
@@ -1054,7 +1053,10 @@ class TestRedirectTo(unittest.TestCase):
         
         R = app.get("/spam/or/eggs", status=302)
 
-    def test_declarative(self):
+
+class TestDeclarative(object):
+
+    def test_sample(self):
         class Bar2(resource.Resource):
             @resource.GET()
             def get(self, request):
@@ -1104,7 +1106,58 @@ class TestRedirectTo(unittest.TestCase):
         R = app.get("/spum42", status=302)
         assert R.headers["location"].startswith('http://')
         assert R.headers["location"].endswith('/spam42')
+'''
+    def test_sample2(self):
+        class Bar2(resource.Resource):
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "bar")
 
+        class Spam2(resource.Resource):
+            def __init__(self, id, _parent):
+                self.id = id
+                self.parent = _parent
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "%s %s" % (self.parent.foo, self.id))
+
+        class Resource2(resource.Resource):
+            def __init__(self, foo):
+                self.foo = foo
+
+            @resource.GET()
+            def get(self, request):
+                return http.ok([("Content-Type", "text/plain")],
+                               "resource")
+
+            foo = resource.redirect(Bar2)
+            foo2 = resource.redirect("foo2", Bar2)
+            bar = resource.child2(Bar2)
+
+            spum = resource.redirect("spum{id}", Spam2)
+            spam = resource.child2("spam{id}", Spam2, with_parent=True)
+
+        app = make_app(Resource2("who's your daddy"))
+        
+        R = app.get("/", status=200)
+        assert R.body == 'resource'
+
+        R = app.get("/bar", status=200)
+        assert R.body == 'bar'
+        
+        R = app.get("/foo", status=302)
+        R = app.get("/foo2", status=302)
+        
+        R = app.get("/spam42", status=200)
+        assert R.body == 'who\'s your daddy 42'
+        
+        R = app.get("/spum42", status=302)
+        assert R.headers["location"].startswith('http://')
+        assert R.headers["location"].endswith('/spam42')
+'''
 
 if __name__ == '__main__':
     unittest.main()
