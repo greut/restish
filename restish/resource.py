@@ -2,7 +2,6 @@
 Base Resource class and associates methods for children and content negotiation
 """
 
-import inspect
 import mimetypes
 import re
 import mimeparse
