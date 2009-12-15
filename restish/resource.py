@@ -140,13 +140,6 @@ class TemplateChildMatcher(object):
         segments = self.pattern.split(self.SPLITTER)
         self.score = tuple(score(segment) for segment in segments)
 
-    @staticmethod
-    def _re_safe(s):
-        """Make a safe expression to be used into a regexp"""
-        for c in r'\+*()[].^|':
-            s = s.replace(c, r'\%s' % c)
-        return s
-
     def _build_regex(self):
         """Build the regex from the pattern"""
         def re_segments(segments):
@@ -157,8 +150,8 @@ class TemplateChildMatcher(object):
                     var, suffix = rest.rsplit("}", 1)
                     pos = var.find(":")
                     # make them regexp safe
-                    prefix = self._re_safe(prefix)
-                    suffix = self._re_safe(suffix)
+                    prefix = re.escape(prefix)
+                    suffix = re.escape(suffix)
                     if ~pos:
                         regex = '%s(?P<%s>%s)%s' % (prefix,
                                                     var[:pos],
@@ -170,7 +163,7 @@ class TemplateChildMatcher(object):
                                                         suffix)
                     yield regex
                 else:
-                    yield self._re_safe(segment)
+                    yield re.escape(segment)
 
         segments = self.pattern.split('/')
         self._count = len(segments)
@@ -599,4 +592,3 @@ def _filter_dispatchers_on_accept(dispatchers, request):
     best_match = mimeparse.best_match(supported, str(request.accept))
     # Return the matching dispatchers
     return [d for d in dispatchers if best_match in d[1]['accept']]
-
