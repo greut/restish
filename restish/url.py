@@ -1,7 +1,8 @@
 import urlparse
 import urllib
 
-from webob import MultiDict, parse_qsl
+from webob.request import parse_qsl
+from webob.multidict import MultiDict
 
 # Lists of characters considered "safe", i.e. should not be escape encoded.
 SAFE = '-_.!*\'()~'
