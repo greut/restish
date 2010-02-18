@@ -116,7 +116,7 @@ class TestResource(unittest.TestCase):
             response = getattr(app, method.lower())('/', status=200)
             assert response.body == method
         
-        response = app.request("/", method="HEAD", status=200)
+        response = app.head("/", status=200)
         assert response.body == ""
 
     def test_all_methods(self):
@@ -143,9 +143,7 @@ class TestResource(unittest.TestCase):
         
         A = make_app(Resource())
         for method, body  in tests:
-            response = A.request("/",
-                                 method=method,
-                                 status=200)
+            response = getattr(A, method.lower())("/", status=200)
             assert response.body == body
 
     def test_derived(self):

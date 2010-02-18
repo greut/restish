@@ -9,7 +9,7 @@ from restish.page import Element
 class Templating(object):
     
     def __init__(self, renderer):
-        self.renderer = renderer
+        self.renderer = renderer or _missing_renderer
 
     def render(self, request, template, args=None, encoding=None):
         """
@@ -212,4 +212,13 @@ def element(template):
         decorated.__name__ = func.func_name
         return decorated
     return decorator
+
+
+def _missing_renderer(*a, **k):
+    """
+    Dummy renderer used to provide a nice error message when the templating
+    has not been configured.
+    """
+    raise TypeError("Please configure templating with a renderer before "
+                    "using it.")
 

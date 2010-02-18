@@ -1,9 +1,3 @@
-.gitignore
-AUTHORS
-CHANGELOG
-FAQ
-INSTALL
-NEWS
 README
 setup.cfg
 setup.py
@@ -18,6 +12,7 @@ restish/resource.py
 restish/templating.py
 restish/url.py
 restish/util.py
+restish.egg-info/.SOURCES.txt.swp
 restish.egg-info/PKG-INFO
 restish.egg-info/SOURCES.txt
 restish.egg-info/dependency_links.txt
@@ -32,15 +27,3 @@ restish/contrib/genshirenderer.py
 restish/contrib/jinja2renderer.py
 restish/contrib/makorenderer.py
 restish/contrib/tempitarenderer.py
-restish/pastertemplate/development.ini_tmpl
-restish/pastertemplate/live.ini_tmpl
-restish/pastertemplate/setup.py_tmpl
-restish/pastertemplate/+package+/__init__.py
-restish/pastertemplate/+package+/websetup.py_tmpl
-restish/pastertemplate/+package+/wsgiapp.py_tmpl
-restish/pastertemplate/+package+/lib/__init__.py
-restish/pastertemplate/+package+/lib/guard.py
-restish/pastertemplate/+package+/lib/templating.py_tmpl
-restish/pastertemplate/+package+/public/index.html_tmpl
-restish/pastertemplate/+package+/resource/__init__.py
-restish/pastertemplate/+package+/resource/root.py_tmpl
