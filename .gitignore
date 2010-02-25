@@ -3,6 +3,7 @@ dist
 *.pyc
 *.swp
 .coverage
+doctrees
 html
 *.egg
 *.egg-info

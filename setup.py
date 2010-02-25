@@ -47,7 +47,7 @@ or database engine.
       restish = restish.pastertemplate:RestishTemplate
       """,
       test_suite='tests',
-      tests_require=['WebTest',
+      tests_require=['WebTest', # http://bitbucket.org/greut/webtest/ 
                      'Jinja2',
                      'mako',
                      'Genshi',
