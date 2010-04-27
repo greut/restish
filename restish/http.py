@@ -184,7 +184,7 @@ _REDIRECTION_PAGE = """<html>
 </html>"""
 
 
-def _redirect(status, location, body=None):
+def _redirect(status, location, headers=None, body=None):
     """
     Creating a standard HTML content for the common redirects:
      * 301 Moved Permanently
@@ -192,16 +192,20 @@ def _redirect(status, location, body=None):
      * 303 See Other
     """
     redirection_url = url.URL(location)
-    body = _REDIRECTION_PAGE % {"status": status,
-                                "url": cgi.escape(redirection_url),
-                                "location": cgi.escape(location)}
-    return Response(status,
-                    [('Location', redirection_url),
-                     ('Content-Type', 'text/html; charset=utf-8')],
-                    body)
+    
+    if not headers:
+        headers = []
+    headers.extend([('Location', redirection_url),
+                    ('Content-Type', 'text/html')])
+    if not body:
+        body = _REDIRECTION_PAGE % {"status": status,
+                                    "url": cgi.escape(redirection_url),
+                                    "location": cgi.escape(location)}
+
+    return Response(status, headers, body)
 
 
-def moved_permanently(location):
+def moved_permanently(location, headers=None):
     """
     301 Moved Permanently
 
@@ -225,10 +229,10 @@ def moved_permanently(location):
     301 status code, some existing HTTP/1.0 user agents will
     erroneously change it into a GET request.
     """
-    return _redirect("301 Moved Permanently", location)
+    return _redirect("301 Moved Permanently", location, headers)
 
 
-def found(location):
+def found(location, headers=None):
     """
     302 Found
 
@@ -253,10 +257,10 @@ def found(location):
     The status codes 303 and 307 have been added for servers that wish to make
     unambiguously clear which kind of reaction is expected of the client.
     """
-    return _redirect("302 Found", location)
+    return _redirect("302 Found", location, headers)
 
 
-def see_other(location):
+def see_other(location, headers=None):
     """
     303 See Other
 
@@ -277,7 +281,7 @@ def see_other(location):
     used instead, since most user agents react to a 302 response as described
     here for 303.
     """
-    return _redirect("303 See Other", location)
+    return _redirect("303 See Other", location, headers)
 
 
 def not_modified(headers=None):
