@@ -1,0 +1,5 @@
+recursive-include restish/pastertemplate *
+include CHANGELOG
+include README
+include INSTALL
+global-exclude .DS_Store *.hgignore *.hgtags
