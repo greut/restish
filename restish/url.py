@@ -218,8 +218,9 @@ class URL(str):
             query_ = query
         if fragment is not _UNSET:
             fragment_ = fragment
-        return self.__class__(urlparse.urlunsplit((scheme_, netloc_, path_, query_, fragment_)))
-    
+        return self.__class__(urlparse.urlunsplit((scheme_, netloc_, path_,
+                                                   query_, fragment_)))
+
     ## path manipulations ##
 
     def _keep_fragment(self, keep_fragment):
@@ -297,7 +298,8 @@ class URL(str):
         """
         Modify the path as if ``href`` were clicked
 
-        Create a url as if the current url was given by ``self`` and ``href`` was clicked on
+        Create a url as if the current url was given by ``self`` and ``href``
+        was clicked on
         """
         scheme, netloc, path, query, fragment = urlparse.urlsplit(href)
 
@@ -322,25 +324,27 @@ class URL(str):
                     query = self.query
             else:
                 if path[0] != '/':
-                    path = join_path(self.path_segments[:-1] + split_path(path))
+                    path = join_path(self.path_segments[:-1] + \
+                                     split_path(path))
 
         path = normalise_path(path)
         return self.clone(scheme=scheme, netloc=netloc, \
-                          path=path, query=query, fragment=fragment) 
-    
+                          path=path, query=query, fragment=fragment)
+
     def add_query(self, name, value=None):
         """
         Add a query argument with the given value
 
         :arg key: the query key
-        :arg value: The query value. None means do not use a value. e.g. ``?key=``
+        :arg value: The query value. None means do not use a value. e.g.
+                    ``?key=``
         """
         if value is not None:
             value = unicode(value)
         q = list(self.query_list)
         q.append((name, value))
         return self.clone(query=join_query(q))
-    
+
     def add_queries(self, query_list):
         """
         Add multiple query args from a list of tuples
@@ -357,7 +361,8 @@ class URL(str):
         exists*, then add the argument with the given value.
 
         :arg key: the query key
-        :arg value: The query value. None means do not use a value. e.g. ``?key=``
+        :arg value: The query value. None means do not use a value. e.g.
+                    ``?key=``
         """
         if value is not None:
             value = unicode(value)
@@ -385,14 +390,15 @@ class URL(str):
         """
         Remove all existing query arguments
 
-        :arg name: the name of the query arguments to remove, defaults to removing all
+        :arg name: the name of the query arguments to remove, defaults to
+                   removing all
         """
         if name is None:
             q = []
         else:
             q = filter(lambda x: x[0] != name, self.query_list)
         return self.clone(query=join_query(q))
-    
+
     ## scheme manipulation ##
 
     def secure(self, secure=True, port=None):
@@ -419,7 +425,7 @@ class URL(str):
 
     def anchor(self, anchor=None):
         """
-        Modify the fragment/anchor and return a new URL. 
+        Modify the fragment/anchor and return a new URL.
 
         :arg anchor: An anchor of None (the default) or '' will remove the
                      current anchor.
@@ -493,7 +499,7 @@ class URLAccessor(object):
         """
         return URL(url)
 
-    
+
 def normalise_path(path):
     """
     Normalise the URL path by resolving segments of '.' and '..'.

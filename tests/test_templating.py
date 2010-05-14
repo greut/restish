@@ -207,7 +207,7 @@ class TestPage(unittest.TestCase):
     def test_page_decorator_with_custom_headers(self):
         def renderer(template, args, encoding=None):
             return args['body']
-        
+
         class Resource(resource.Resource):
             @resource.GET()
             @templating.page('page')

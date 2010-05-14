@@ -349,7 +349,7 @@ def _normalise_mimetype(mimetype):
     if '/' in mimetype:
         return mimetype
     # Try mimetypes module, by extension.
-    real = mimetypes.guess_type('filename.%s'%mimetype)[0]
+    real = mimetypes.guess_type('filename.%s' % mimetype)[0]
     if real is not None:
         return real
     # Try extra extension mapping.
@@ -381,7 +381,8 @@ def _gather_request_dispatchers(cls, clsattrs):
     for wrapper in _find_annotated_funcs(clsattrs, _RESTISH_METHOD):
         method = getattr(wrapper, _RESTISH_METHOD, None)
         match = getattr(wrapper, _RESTISH_MATCH)
-        request_dispatchers.setdefault(method, []).append((wrapper.func, match))
+        request_dispatchers.setdefault(method, []).append(
+            (wrapper.func, match))
     # Append any handlers that were added by base classes.
     for method, dispatchers in getattr(cls, 'request_dispatchers', {}).iteritems():
         request_dispatchers.setdefault(method, []).extend(dispatchers)
@@ -564,7 +565,8 @@ def _best_dispatcher(dispatchers, request):
     # only those that match.
     content_type = request.headers.get('content-type')
     if content_type:
-        dispatchers = _filter_dispatchers_on_content_type(dispatchers, str(content_type))
+        dispatchers = _filter_dispatchers_on_content_type(dispatchers,
+                                                          str(content_type))
     accept = request.headers.get('accept')
     if accept:
         dispatchers = _filter_dispatchers_on_accept(dispatchers, str(accept))
@@ -573,6 +575,7 @@ def _best_dispatcher(dispatchers, request):
         return dispatchers[0]
     else:
         return None
+
 
 def _filter_dispatchers_on_content_type(dispatchers, content_type):
     # Build an ordered list of the supported types.

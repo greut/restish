@@ -12,7 +12,7 @@ POUND = '£'.decode('utf-8')
 theurl = "http://www.foo.com:80/a/nice/path/?zot=23&zut"
 
 # RFC1808 relative tests. Not all of these pass yet.
-rfc1808_relative_link_base='http://a/b/c/d;p?q#f'
+rfc1808_relative_link_base = 'http://a/b/c/d;p?q#f'
 rfc1808_relative_link_tests = [
     # "Normal"
     ('g:h', 'g:h'),
@@ -132,12 +132,10 @@ class TestURL(unittest.TestCase):
             result = url.URL(test)
             self.assertEquals(test, result)
 
-
     def test_equality(self):
         urlpath = url.URL(theurl)
         self.failUnlessEqual(urlpath, url.URL(theurl))
         self.failIfEqual(urlpath, url.URL('ftp://www.anotherinvaliddomain.com/foo/bar/baz/?zot=21&zut'))
-
 
     def test_fragmentEquality(self):
         """
@@ -146,10 +144,8 @@ class TestURL(unittest.TestCase):
         """
         self.assertEqual(url.URL('http://localhost:1234/#'), url.URL('http://localhost:1234/'))
 
-
     def test_query_equality(self):
         self.assertEqual(url.URL('http://localhost/?'), url.URL('http://localhost/'))
-
 
     def test_parent(self):
         urlpath = url.URL(theurl)
@@ -157,7 +153,6 @@ class TestURL(unittest.TestCase):
                           urlpath.parent())
         self.assertEquals(url.URL('http://localhost/').parent(), 'http://localhost')
         self.assertRaises(IndexError, url.URL('http://localhost').parent)
-
 
     def test_path(self):
         """
@@ -234,7 +229,6 @@ class TestURL(unittest.TestCase):
             "http://www.foo.com:80/a/nice/sister",
             urlpath.sibling('sister'))
 
-
     def test_click(self):
         urlpath = url.URL(theurl)
         # a null uri should be valid (return here)
@@ -267,7 +261,6 @@ class TestURL(unittest.TestCase):
         u = url.URL('http://localhost/foo?abc=def')
         self.failUnlessEqual(u.click('http://www.python.org'), 'http://www.python.org')
 
-
     def test_cloneUnchanged(self):
         """
         Verify that L{url.URL.cloneURL} doesn't change any of the arguments it
@@ -278,7 +271,6 @@ class TestURL(unittest.TestCase):
             urlpath.clone(scheme=urlpath.scheme, netloc=urlpath.netloc,
                 path=urlpath.path, query=urlpath.query, fragment=urlpath.fragment),
             urlpath)
-
 
     def test_clickCollapse(self):
         tests = [
@@ -299,8 +291,7 @@ class TestURL(unittest.TestCase):
         for start, click, result in tests:
             self.assertEquals(
                 url.URL(start).click(click),
-                result
-                )
+                result)
 
     def test_add_query(self):
         urlpath = url.URL(theurl)
@@ -399,7 +390,6 @@ class TestURL(unittest.TestCase):
         self.assertEquals(url.URL('http://localhost:8080/').secure(port=8443), 'https://localhost:8443/')
         self.assertEquals(url.URL('https://localhost:8443/').secure(False, 8080), 'http://localhost:8080/')
 
-
     def test_eq_same(self):
         u = url.URL('http://localhost/')
         self.failUnless(u == u, "%r != itself" % u)
@@ -489,7 +479,7 @@ class Serialization(unittest.TestCase):
             )
         for test, result in tests:
             u = url.URL(base).child(test)
-            self.assertEquals(u, base+result)
+            self.assertEquals(u, base + result)
 
 
 #    def test_rfc1808(self):
@@ -539,7 +529,7 @@ class TestURLAccessor(unittest.TestCase):
 
     def test_new(self):
         u = self.url_accessor.new('http://localhost:1234/a/b/c')
-        assert u == 'http://localhost:1234/a/b/c' 
+        assert u == 'http://localhost:1234/a/b/c'
         self.assertTrue(isinstance(u, url.URL))
 
 if __name__ == '__main__':

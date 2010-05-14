@@ -205,7 +205,7 @@ class TestResourceLike(unittest.TestCase):
     def test_not_callable(self):
         A = app.RestishApp(TraversableResource())
         self.assertRaises(TypeError, webtest.TestApp(A).get, '/')
-        
+
     def test_traversable(self):
         A = app.RestishApp(TraversableResource())
         assert webtest.TestApp(A).get('/foo').body == 'CallableResource'
@@ -221,7 +221,7 @@ class TestResourceLike(unittest.TestCase):
     def test_func_not_traversable(self):
         A = app.RestishApp(resource_func)
         webtest.TestApp(A).get('/foo', status=404)
-        
+
 
 if __name__ == '__main__':
     unittest.main()
