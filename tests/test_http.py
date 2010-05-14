@@ -125,7 +125,6 @@ class TestRedirectionResponseFactories(unittest.TestCase):
         webtest.TestApp(app.RestishApp(r)).get('/')
         # Test response details.
         assert r.status.startswith('302')
-        print r.headers
         assert r.headers['Location'] == 'http://xn--n3h.net/'
         assert r.headers['Content-Length']
         assert cgi.escape(location.encode("utf-8")) in r.body
