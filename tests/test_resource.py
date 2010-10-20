@@ -189,6 +189,22 @@ class TestResource(unittest.TestCase):
         assert head_response.headers['content-length'] == get_response.headers['content-length']
         assert head_response.body == ''
 
+    def test_default_head_forwards(self):
+        # Check that the default HEAD implementation handles forwarding to a
+        # 2nd resource returned from a call to the 1st resource.
+        class First(resource.Resource):
+            @resource.GET()
+            def GET(self, request):
+                return Second()
+        class Second(resource.Resource):
+            @resource.GET()
+            def GET(self, request):
+                return http.ok([('Content-Type', 'text/plain')], 'text')
+        head_response = First()(http.Request.blank('/', environ={'REQUEST_METHOD': 'HEAD'}))
+        assert head_response.status == '200 OK'
+        assert head_response.headers['content-length'] == '4'
+        assert head_response.body == ''
+
     def test_specialised_head(self):
         class Resource(resource.Resource):
             @resource.GET()
@@ -216,6 +232,14 @@ class TestResource(unittest.TestCase):
                               .environ
         response = Resource()(http.Request(environ))
         assert response.body == ""
+
+    def test_bad_accept(self):
+        class Resource(resource.Resource):
+            @resource.GET()
+            def text(self, request):
+                return http.ok([('Content-Type', 'text/plain')], 'text')
+        app = make_app(Resource())
+        assert app.get('/', headers={'Accept': 'text/html, text/plain,'}, status=200).body == 'text'
 
 
 class TestChildLookup(unittest.TestCase):
@@ -316,7 +340,7 @@ class TestChildLookup(unittest.TestCase):
             def first(self, request, segments):
                 return self.__class__(self.segments + ['first'] + segments), []
             def __call__(self, request):
-                return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments))
+                return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments).encode('utf-8'))
         A = app.RestishApp(Resource())
         R = webtest.TestApp(A).get('/first')
         assert R.status.startswith('200')
@@ -336,7 +360,7 @@ class TestChildLookup(unittest.TestCase):
             def static_child(self, request, segments):
                 return self.__class__(self.segments + ['foo', 'bar'] + segments), []
             def __call__(self, request):
-                return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments))
+                return http.ok([('Content-Type', 'text/plain')], '/'.join(self.segments).encode('utf-8'))
         A = app.RestishApp(Resource())
         R = webtest.TestApp(A).get('/foo/bar')
         assert R.status.startswith('200')
@@ -396,7 +420,7 @@ class TestChildLookup(unittest.TestCase):
                 return self.__class__(self.segments+segments), []
             def __call__(self, request):
                 return http.ok([('Content-Type', 'text/plain')],
-                               '/'.join(self.segments))
+                               '/'.join(self.segments).encode('utf-8'))
         class Resource(resource.Resource):
             @resource.child('a/b/c')
             def _1(self, request, segments):

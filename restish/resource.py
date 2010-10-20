@@ -279,8 +279,8 @@ class ResourceMethodWrapper(object):
     Implementation note: The wrapper class is always added to decorated
     functions. However, the wrapper is discarded for Resource methods at the
     time the annotated methods are collected by the metaclass. This is because
-    the Resource._call__ is already doing basicall the same work, only it has a
-    whole suite of dispatchers to worry about.
+    the Resource._call__ is already doing basically the same work, only it has
+    a whole suite of dispatchers to worry about.
     """
 
     def __init__(self, func):
@@ -508,7 +508,10 @@ class Resource(object):
         resource's class that includes a Content-Length header but no body.
         """
         request.method = 'GET'
+        # Loop until we get an actual response to support resource forwarding.
         response = self(request)
+        while not isinstance(response, http.Response):
+            response = response(request)
         content_length = response.headers.get('content-length')
         response.body = ''
         if content_length is not None:
@@ -569,7 +572,8 @@ def _best_dispatcher(dispatchers, request):
                                                           str(content_type))
     accept = request.headers.get('accept')
     if accept:
-        dispatchers = _filter_dispatchers_on_accept(dispatchers, str(accept))
+        accept = accept.strip(', ') # Some clients send bad accept headers
+        dispatchers = _filter_dispatchers_on_accept(dispatchers, accept)
     # Return the best match or None
     if dispatchers:
         return dispatchers[0]
